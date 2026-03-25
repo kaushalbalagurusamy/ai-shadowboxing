@@ -28,12 +28,31 @@ export default function Home() {
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [insights, setInsights] = useState<any[]>([]);
 
   // Ref to store conversationId for cleanup
   const conversationIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     conversationIdRef.current = conversationId;
+    
+    // Start polling for insights when conversation starts
+    let interval: NodeJS.Timeout;
+    if (conversationId) {
+      interval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/tavus/insights?conversationId=${conversationId}`);
+          const data = await res.json();
+          if (data.insights) setInsights(data.insights);
+        } catch (err) {
+          console.error("Polling error:", err);
+        }
+      }, 5000); // Poll every 5 seconds
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [conversationId]);
 
   const endSession = async (idToEnd: string) => {
@@ -73,7 +92,7 @@ export default function Home() {
     if (!conversationId) return;
     setIsLoading(true);
     await endSession(conversationId);
-    setConversationId(null);
+    // Don't clear conversationId immediately so we can see final summary
     setConversationUrl(null);
     setIsLoading(false);
   };
@@ -81,6 +100,7 @@ export default function Home() {
   const startSparring = async () => {
     setIsLoading(true);
     setError(null);
+    setInsights([]); // Reset insights for new session
     try {
       const res = await fetch("/api/tavus", {
         method: "POST",
@@ -167,6 +187,33 @@ export default function Home() {
           >
             {isLoading ? "Stopping Session..." : "End Session"}
           </button>
+        )}
+
+        {/* Insight Log Panel */}
+        {insights.length > 0 && (
+          <div style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+            <h2 style={{ fontSize: '1rem', marginBottom: '10px' }}>Raven-1 Insights</h2>
+            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              {insights.map((insight, idx) => (
+                <div key={idx} style={{ 
+                  backgroundColor: 'rgba(255,255,255,0.05)', 
+                  padding: '10px', 
+                  borderRadius: '4px', 
+                  marginBottom: '8px',
+                  fontSize: '0.8rem'
+                }}>
+                  <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
+                    {insight.type === 'behavioral_cue' ? '🚨 CUE DETECTED' : '✅ SESSION SUMMARY'}
+                  </div>
+                  {insight.reason && <div>Reason: {insight.reason}</div>}
+                  {insight.analysis && <div>Summary: {JSON.stringify(insight.analysis)}</div>}
+                  <div style={{ opacity: 0.5, fontSize: '0.7rem' }}>
+                    {new Date(insight.timestamp).toLocaleTimeString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 

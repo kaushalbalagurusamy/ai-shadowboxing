@@ -1,0 +1,26 @@
+{
+  "name": "ai-shadowboxing",
+  "version": "1.0.0",
+  "description": "AI Shadowboxing is a gamified \"first date\" training simulator designed to help straight men practice high-stakes interpersonal interactions. Leveraging state-of-the-art native multimodal streaming models (e.g., Gemini 3.1, GPT 5.4, Claude Opus 4.6), the simulator reacts instantly not just to *what* you say, but *how* you say it (vocal pitch, nervous laughter, eye contact, and posture).",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "next": "^16.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.2"
+  }
+}

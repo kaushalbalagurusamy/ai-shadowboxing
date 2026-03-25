@@ -67,7 +67,7 @@ h1 {
   color: var(--text-muted);
 }
 
-textarea {
+textarea, select {
   background-color: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
@@ -79,7 +79,12 @@ textarea {
   min-height: 120px;
 }
 
-textarea:focus {
+select {
+  min-height: auto;
+  appearance: none;
+}
+
+textarea:focus, select:focus {
   outline: none;
   border-color: var(--primary);
 }

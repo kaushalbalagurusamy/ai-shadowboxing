@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const { systemPrompt, knowledgeBase } = await req.json();
+    const { systemPrompt, knowledgeBase, replicaId } = await req.json();
     const apiKey = process.env.TAVUS_API_KEY;
 
     if (!apiKey) {
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        replica_id: "r79277006230", // Ashley PAL
+        replica_id: replicaId || "r9d30b0e55ac",
         persona_id: personaData.persona_id,
         conversation_name: "Phase 1 Demo Session"
       })
@@ -45,7 +45,10 @@ export async function POST(req: Request) {
     const conversationData = await conversationRes.json();
     if (!conversationRes.ok) throw new Error(conversationData.message || "Failed to create conversation");
 
-    return NextResponse.json({ url: conversationData.conversation_url });
+    return NextResponse.json({ 
+      url: conversationData.conversation_url,
+      conversationId: conversationData.conversation_id 
+    });
 
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -18,7 +18,7 @@ const CORE_AVATARS = [
 export default function Home() {
   const [replicaId, setReplicaId] = useState(CORE_AVATARS[0].id);
   const [systemPrompt, setSystemPrompt] = useState(
-    "You are a charismatic, slightly challenging conversation partner. You are testing the user's ability to hold a fluid, confident conversation. If they hesitate or break eye contact, gently call them out. Maintain a natural, casual tone like a first date at a coffee shop."
+    "You are an attractive mid 20s woman from NYC on a first date at a coffee shop. You have a plethora of options and are initially very low interest in your date. You are a high value lawyer and are initially standoffish. Utilize your knowledge base to increase interest if and only if your date exhibits high value themselves and high charisma as defined by the knowledge base."
   );
   const [knowledgeBase, setKnowledgeBase] = useState(
     "Rubric 1: Confidence - Measured by steady speaking pace and lack of filler words.\nRubric 2: Engagement - Measured by asking follow-up questions.\nRubric 3: Assertiveness - Measured by holding opinions gently but firmly."

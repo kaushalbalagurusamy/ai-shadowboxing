@@ -77,6 +77,10 @@ export async function POST(req: Request) {
     const conversationData = await conversationRes.json();
     if (!conversationRes.ok) throw new Error(conversationData.message || "Failed to create conversation");
 
+    // Store knowledge base for Phase 2 synthesis
+    const { insightStore } = await import('@/lib/insightStore');
+    insightStore.setMetadata(conversationData.conversation_id, 'knowledge_base', knowledgeBase);
+
     return NextResponse.json({ 
       url: conversationData.conversation_url,
       conversationId: conversationData.conversation_id 

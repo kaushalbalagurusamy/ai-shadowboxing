@@ -31,6 +31,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [insights, setInsights] = useState<any[]>([]);
   const [masterLog, setMasterLog] = useState<string | null>(null);
+  const [synthesis, setSynthesis] = useState<any | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
 
   // Refs for scroll sync
@@ -53,9 +54,12 @@ export default function Home() {
           if (data.insights) {
             setInsights(data.insights);
             
-            // Check if master log is already in metadata
+            // Sync metadata
             const log = data.insights.find((i: any) => i.type === 'metadata' && i.key === 'master_performance_log');
             if (log) setMasterLog(log.value);
+
+            const synth = data.insights.find((i: any) => i.type === 'metadata' && i.key === 'session_synthesis');
+            if (synth) setSynthesis(synth.value);
           }
         } catch (err) {
           console.error("Polling error:", err);
@@ -83,9 +87,8 @@ export default function Home() {
         body: JSON.stringify({ conversationId: id }),
       });
       const data = await res.json();
-      if (data.masterPerformanceLog) {
-        setMasterLog(data.masterPerformanceLog);
-      }
+      if (data.masterPerformanceLog) setMasterLog(data.masterPerformanceLog);
+      if (data.synthesis) setSynthesis(data.synthesis);
     } catch (err) {
       console.error("Synthesis failed:", err);
     } finally {
@@ -133,9 +136,8 @@ export default function Home() {
     setIsLoading(false);
     setActiveTab("Notes");
     
-    // Trigger Gemini Zipper after session ends
-    // Wait a moment for final webhooks to arrive
-    setTimeout(() => runSynthesis(conversationId), 2000);
+    // Trigger Gemini synthesis
+    setTimeout(() => runSynthesis(conversationId), 3000);
   };
 
   const startSparring = async () => {
@@ -143,6 +145,7 @@ export default function Home() {
     setError(null);
     setInsights([]); 
     setMasterLog(null);
+    setSynthesis(null);
     setActiveTab("Date");
     try {
       const res = await fetch("/api/tavus", {
@@ -166,7 +169,6 @@ export default function Home() {
     }
   };
 
-  // Extract data for the boxes
   const sessionSummary = insights.find(i => i.type === 'session_summary');
   const behavioralCues = insights.filter(i => i.type === 'behavioral_cue');
   const transcriptTurns = insights.filter(i => i.type === 'transcript_turn');
@@ -258,7 +260,6 @@ export default function Home() {
         ) : (
           <div className="notes-container" style={{ paddingBottom: '32px' }}>
             
-            {/* Box 1: Transcript */}
             <div className="notes-section">
               <div className="notes-section-title">Transcript</div>
               <div className="scroll-box" ref={transcriptRef}>
@@ -273,7 +274,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Box 2: Tool Calls */}
             <div className="notes-section">
               <div className="notes-section-title">Tool Calls</div>
               <div className="scroll-box" ref={toolsRef}>
@@ -293,10 +293,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Box 3: Final Analysis */}
             <div className="notes-section">
               <div className="notes-section-title">Final Analysis</div>
-              <div className="scroll-box" style={{ maxHeight: '180px' }}>
+              <div className="scroll-box" style={{ maxHeight: '150px' }}>
                 {sessionSummary && sessionSummary.analysis ? Object.entries(sessionSummary.analysis).map(([key, value]: [string, any], idx) => (
                   <div key={idx} className="note-item" style={{ background: '#ffffff', borderColor: 'var(--border)' }}>
                     <div className="badge badge-blue">{key.split(':')[0]}</div>
@@ -309,15 +308,40 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Box 4: Mentor Transmission */}
             <div className="notes-section">
-              <div className="notes-section-title">Mentor Transmission (Zipped Log)</div>
+              <div className="notes-section-title">Mentor Transmission</div>
               <div className="scroll-box" style={{ maxHeight: 'none', background: '#f8f8fa' }}>
                 {isSynthesizing ? (
-                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>The Zipper is interleaving streams...</div>
-                ) : masterLog ? (
-                  <div className="note-item" style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.75rem', background: 'transparent', border: 'none' }}>
-                    {masterLog}
+                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Coach is synthesizing performance...</div>
+                ) : synthesis ? (
+                  <div className="notes-container" style={{ gap: '12px' }}>
+                    <div className="insight-card" style={{ background: '#ffffff', border: 'none' }}>
+                      <div className="badge-row" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                        {Object.entries(synthesis.audit.scores).map(([k, v]: [string, any]) => (
+                          <div key={k} className="badge badge-blue" style={{ marginBottom: 0 }}>{k}: {v}/10</div>
+                        ))}
+                      </div>
+                      <div className="note-label" style={{ color: 'var(--danger)' }}>Primary Weakness</div>
+                      <div style={{ fontWeight: 600, marginBottom: '8px' }}>{synthesis.audit.primary_weakness}</div>
+                      <div style={{ fontSize: '0.8rem', lineHeight: '1.4', opacity: 0.8 }}>{synthesis.audit.rationale}</div>
+                    </div>
+                    
+                    <div className="note-item" style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', background: '#ffffff', borderColor: 'var(--border)' }}>
+                      <div className="note-label">Mentor Prompt (M1)</div>
+                      {synthesis.mentor_prompt.system_instruction}
+                    </div>
+
+                    <div className="note-item" style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', background: '#ffffff', borderColor: 'var(--border)' }}>
+                      <div className="note-label">Next Partner Prompt (P1)</div>
+                      {synthesis.next_partner_prompt.system_instruction}
+                    </div>
+
+                    <details style={{ marginTop: '8px' }}>
+                      <summary style={{ fontSize: '0.7rem', cursor: 'pointer', opacity: 0.5, fontWeight: 600, textTransform: 'uppercase' }}>View Zipped Log</summary>
+                      <div className="note-item" style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.75rem', background: 'transparent', border: 'none', marginTop: '8px' }}>
+                        {masterLog}
+                      </div>
+                    </details>
                   </div>
                 ) : (
                   <div className="placeholder" style={{ fontSize: '0.8rem' }}>Transmission will arrive after session analysis.</div>

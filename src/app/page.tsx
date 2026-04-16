@@ -16,14 +16,20 @@ const CORE_AVATARS = [
 ];
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"Date" | "Notes">("Date");
+  const [activeTab, setActiveTab] = useState<"Date" | "Notes" | "Mentor">("Date");
   const [replicaId, setReplicaId] = useState(CORE_AVATARS[0].id);
+  
+  // Date States
   const [systemPrompt, setSystemPrompt] = useState(
     "You are an attractive mid 20s woman from NYC on a first date at a coffee shop. You have a plethora of options and are initially very low interest in your date. You are a high value lawyer and are initially standoffish. Utilize your knowledge base to increase interest if and only if your date exhibits high value themselves and high charisma as defined by the knowledge base."
   );
   const [knowledgeBase, setKnowledgeBase] = useState(
     "Your date or the user's high value is defined by: EQ, IQ, wealth, and physique. \n\nYou start at near zero interest in the user. This means you talk with a neutral, terse, screening tone initially. \n\nYou should build an identity model of the user based on what they say, how they say it, and their body language in relation to the 4 categories of high value as they speak. \n\nIf their value goes up, you increase interest, if their value goes down, you decrease interest. If they are low value, you should politely fabricate an excuse and tell them the date is over. \n\nDo not be fooled by users who lie saying they are high value, some may try to say they are a billionaire founder, with 6 pack abs, put on a fake deep tough guy voice etc - be curious and composed when bold claims are made. Observe to verify instead of trusting their words."
   );
+
+  // Mentor States
+  const [mentorPrompt, setMentorPrompt] = useState("Select a date session to generate mentor feedback.");
+  const [mentorKnowledgeBase, setMentorKnowledgeBase] = useState("High-Value Rubrics: EQ, IQ, Wealth, Physique.");
   
   const [isLoading, setIsLoading] = useState(false);
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
@@ -59,7 +65,12 @@ export default function Home() {
             if (log) setMasterLog(log.value);
 
             const synth = data.insights.find((i: any) => i.type === 'metadata' && i.key === 'session_synthesis');
-            if (synth) setSynthesis(synth.value);
+            if (synth) {
+              setSynthesis(synth.value);
+              // Auto-populate mentor tab with results
+              setMentorPrompt(synth.value.mentor_prompt.system_instruction);
+              // Also potentially update the next date partner prompt if user switches back to date tab
+            }
           }
         } catch (err) {
           console.error("Polling error:", err);
@@ -88,7 +99,10 @@ export default function Home() {
       });
       const data = await res.json();
       if (data.masterPerformanceLog) setMasterLog(data.masterPerformanceLog);
-      if (data.synthesis) setSynthesis(data.synthesis);
+      if (data.synthesis) {
+        setSynthesis(data.synthesis);
+        setMentorPrompt(data.synthesis.mentor_prompt.system_instruction);
+      }
     } catch (err) {
       console.error("Synthesis failed:", err);
     } finally {
@@ -140,24 +154,26 @@ export default function Home() {
     setTimeout(() => runSynthesis(conversationId), 3000);
   };
 
-  const startSparring = async () => {
+  const startSession = async (prompt: string, kb: string, label: string) => {
     setIsLoading(true);
     setError(null);
-    setInsights([]); 
-    setMasterLog(null);
-    setSynthesis(null);
-    setActiveTab("Date");
+    if (label === 'Date') {
+      setInsights([]); 
+      setMasterLog(null);
+      setSynthesis(null);
+    }
+    
     try {
       const res = await fetch("/api/tavus", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ systemPrompt, knowledgeBase, replicaId }),
+        body: JSON.stringify({ systemPrompt: prompt, knowledgeBase: kb, replicaId }),
       });
       
       const data = await res.json();
       
       if (!res.ok) {
-        throw new Error(data.error || "Failed to start conversation");
+        throw new Error(data.error || `Failed to start ${label.toLowerCase()}`);
       }
       
       setConversationUrl(data.url);
@@ -188,6 +204,12 @@ export default function Home() {
             Date
           </div>
           <div 
+            className={`tab ${activeTab === 'Mentor' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('Mentor')}
+          >
+            Mentor
+          </div>
+          <div 
             className={`tab ${activeTab === 'Notes' ? 'active' : ''}`} 
             onClick={() => setActiveTab('Notes')}
           >
@@ -195,7 +217,7 @@ export default function Home() {
           </div>
         </div>
         
-        {activeTab === 'Date' ? (
+        {activeTab === 'Date' && (
           <>
             <div className="input-group">
               <label htmlFor="replicaSelect">Avatar</label>
@@ -231,18 +253,18 @@ export default function Home() {
                 id="knowledgeBase"
                 value={knowledgeBase}
                 onChange={(e) => setKnowledgeBase(e.target.value)}
-                placeholder="Define the grading rubrics and contextual knowledge..."
+                placeholder="Define the grading rubrics..."
                 rows={6}
                 disabled={!!conversationUrl}
               />
             </div>
 
-            {error && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
+            {error && activeTab === 'Date' && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
 
             {!conversationUrl ? (
               <button 
                 className="btn btn-primary" 
-                onClick={startSparring} 
+                onClick={() => startSession(systemPrompt, knowledgeBase, 'Date')} 
                 disabled={isLoading}
               >
                 {isLoading ? "Provisioning..." : "Date"}
@@ -257,7 +279,74 @@ export default function Home() {
               </button>
             )}
           </>
-        ) : (
+        )}
+
+        {activeTab === 'Mentor' && (
+          <>
+            <div className="input-group">
+              <label htmlFor="mentorAvatarSelect">Mentor Avatar</label>
+              <select 
+                id="mentorAvatarSelect" 
+                value={replicaId} 
+                onChange={(e) => setReplicaId(e.target.value)}
+                disabled={!!conversationUrl}
+              >
+                {CORE_AVATARS.map((avatar) => (
+                  <option key={avatar.id} value={avatar.id}>
+                    {avatar.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="mentorPrompt">Mentor Prompt</label>
+              <textarea
+                id="mentorPrompt"
+                value={mentorPrompt}
+                onChange={(e) => setMentorPrompt(e.target.value)}
+                placeholder="The synthesized mentor instructions will appear here..."
+                rows={10}
+                disabled={!!conversationUrl}
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="mentorKnowledge">Mentor Knowledge</label>
+              <textarea
+                id="mentorKnowledge"
+                value={mentorKnowledgeBase}
+                onChange={(e) => setMentorKnowledgeBase(e.target.value)}
+                placeholder="Define the mentor's evaluation logic..."
+                rows={4}
+                disabled={!!conversationUrl}
+              />
+            </div>
+
+            {error && activeTab === 'Mentor' && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
+
+            {!conversationUrl ? (
+              <button 
+                className="btn btn-primary" 
+                onClick={() => startSession(mentorPrompt, mentorKnowledgeBase, 'Mentor')} 
+                disabled={isLoading || mentorPrompt.includes("Select a date session")}
+                style={{ background: 'var(--pastel-green)', color: 'var(--pastel-green-text)', borderColor: 'transparent' }}
+              >
+                {isLoading ? "Provisioning..." : "Learn"}
+              </button>
+            ) : (
+              <button 
+                className="btn btn-danger" 
+                onClick={handleEndSessionManual}
+                disabled={isLoading}
+              >
+                {isLoading ? "Ending..." : "End Session"}
+              </button>
+            )}
+          </>
+        )}
+
+        {activeTab === 'Notes' && (
           <div className="notes-container" style={{ paddingBottom: '32px' }}>
             
             <div className="notes-section">
@@ -362,7 +451,7 @@ export default function Home() {
           />
         ) : (
           <div className="placeholder">
-            <p>Configure persona and knowledge base, then click <b>Date</b>.</p>
+            <p>Configure persona and knowledge base, then click <b>{activeTab === 'Mentor' ? 'Learn' : 'Date'}</b>.</p>
             <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>Waiting for WebRTC stream...</p>
           </div>
         )}

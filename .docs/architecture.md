@@ -14,24 +14,31 @@
        |                   (Phoenix + Raven + Sparrow + Knowledge Base)
        |                                      |
        |                                      v
-       +<--- [ Raven Events/Memories ] <--- [ Post-Session ]
+       +<--- [ Raw Tavus JSON Streams ] <--- [ Post-Session ]
+       |      (Transcript, Tool Calls, Analysis)
        |                                      |
        |                                      v
-       +---> [ Gemini 3.1 Flash Lite ] ----> [ Customized P1 / M1 Persona Prompts ]
+       |           [ Gemini 3.1 Flash Lite: THE ZIPPER ]
+       |           (Context Distillation & Timestamp Alignment)
+       |                                      |
+       |                                      v
+       |         [ High-Fidelity Master Performance Log (MD) ]
+       |                                      |
+       |                                      v
+       +---> [ Gemini 3.1 Flash Lite: THE COACH ] ----> [ Customized P1 / M1 Persona Prompts ]
 ```
 
 ## 2. Live Session Architecture (Tavus-Native)
 The MVP utilizes the Tavus-native stack to minimize latency and technical overhead.
 - **Tavus Phoenix:** Handles lifelike digital replica rendering.
-- **Tavus Raven:** Acts as the "Perception Engine," monitoring eye contact, tone, and behaviors. These are stored as **Memories**.
+- **Tavus Raven:** Acts as the "Perception Engine," monitoring eye contact, tone, and behaviors.
 - **Tavus Sparrow:** Manages conversational turn-taking and rhythm.
-- **Tavus Knowledge Base:** Stores the dating/psychological rubrics. Sparrow uses RAG to reference these in real-time.
+- **Tavus Knowledge Base:** Stores the high-value rubrics (EQ, IQ, Wealth, Physique).
 
 ## 3. Customization Engine (Gemini 3.1 Flash Lite)
-Post-session, the architecture transitions to a synthesis phase:
-- **Input:** Raw "Memories" and "Key Event" logs from Tavus Raven.
-- **Reasoning:** **Gemini 3.1 Flash Lite** analyzes these inputs against the Knowledge Base.
-- **Output:** A set of structured persona instructions for the next Sparring Partner (P1) and Mentor (M1).
+The synthesis phase now follows a **Two-Pass Agentic Chain**:
+- **Pass 1: The Zipper (Distillation):** Gemini ingests disparate JSON streams (Sparrow Transcript + Raven Tool Calls + Raven Analysis). It performs "Canonical Trace Generation," interleaving non-verbal subtext directly with dialogue based on precise timestamps.
+- **Pass 2: The Coach (Synthesis):** The Mentor (M1) and Partner (P1) agents read the **Master Performance Log**. This ensures maximum fidelity—the Coach sees exactly how the user reacted *while* speaking or listening.
 
-## 4. Local Recording (Game Film)
-The browser's `MediaRecorder` API is used for zero-latency local recording of the session, providing the user with "game film" for immediate review during the Mentor phase.
+## 4. Cloud Recording (Game Film)
+Tavus Cloud Recording captures the session to AWS S3. The Master Performance Log acts as the "Director's Commentary" for this game film.

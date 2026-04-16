@@ -30,6 +30,8 @@ export default function Home() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [insights, setInsights] = useState<any[]>([]);
+  const [masterLog, setMasterLog] = useState<string | null>(null);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
 
   // Refs for scroll sync
   const transcriptRef = useRef<HTMLDivElement>(null);
@@ -50,6 +52,10 @@ export default function Home() {
           const data = await res.json();
           if (data.insights) {
             setInsights(data.insights);
+            
+            // Check if master log is already in metadata
+            const log = data.insights.find((i: any) => i.type === 'metadata' && i.key === 'master_performance_log');
+            if (log) setMasterLog(log.value);
           }
         } catch (err) {
           console.error("Polling error:", err);
@@ -67,6 +73,25 @@ export default function Home() {
     if (transcriptRef.current) transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
     if (toolsRef.current) toolsRef.current.scrollTop = toolsRef.current.scrollHeight;
   }, [insights]);
+
+  const runSynthesis = async (id: string) => {
+    setIsSynthesizing(true);
+    try {
+      const res = await fetch("/api/synthesis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId: id }),
+      });
+      const data = await res.json();
+      if (data.masterPerformanceLog) {
+        setMasterLog(data.masterPerformanceLog);
+      }
+    } catch (err) {
+      console.error("Synthesis failed:", err);
+    } finally {
+      setIsSynthesizing(false);
+    }
+  };
 
   const endSession = async (idToEnd: string) => {
     try {
@@ -107,12 +132,17 @@ export default function Home() {
     setConversationUrl(null);
     setIsLoading(false);
     setActiveTab("Notes");
+    
+    // Trigger Gemini Zipper after session ends
+    // Wait a moment for final webhooks to arrive
+    setTimeout(() => runSynthesis(conversationId), 2000);
   };
 
   const startSparring = async () => {
     setIsLoading(true);
     setError(null);
     setInsights([]); 
+    setMasterLog(null);
     setActiveTab("Date");
     try {
       const res = await fetch("/api/tavus", {
@@ -136,7 +166,7 @@ export default function Home() {
     }
   };
 
-  // Extract data for the 3 boxes
+  // Extract data for the boxes
   const sessionSummary = insights.find(i => i.type === 'session_summary');
   const behavioralCues = insights.filter(i => i.type === 'behavioral_cue');
   const transcriptTurns = insights.filter(i => i.type === 'transcript_turn');
@@ -266,7 +296,7 @@ export default function Home() {
             {/* Box 3: Final Analysis */}
             <div className="notes-section">
               <div className="notes-section-title">Final Analysis</div>
-              <div className="scroll-box" style={{ maxHeight: 'none' }}>
+              <div className="scroll-box" style={{ maxHeight: '180px' }}>
                 {sessionSummary && sessionSummary.analysis ? Object.entries(sessionSummary.analysis).map(([key, value]: [string, any], idx) => (
                   <div key={idx} className="note-item" style={{ background: '#ffffff', borderColor: 'var(--border)' }}>
                     <div className="badge badge-blue">{key.split(':')[0]}</div>
@@ -275,6 +305,22 @@ export default function Home() {
                   </div>
                 )) : (
                   <div className="placeholder" style={{ fontSize: '0.8rem' }}>Summary available after session end.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Box 4: Mentor Transmission */}
+            <div className="notes-section">
+              <div className="notes-section-title">Mentor Transmission (Zipped Log)</div>
+              <div className="scroll-box" style={{ maxHeight: 'none', background: '#f8f8fa' }}>
+                {isSynthesizing ? (
+                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>The Zipper is interleaving streams...</div>
+                ) : masterLog ? (
+                  <div className="note-item" style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.75rem', background: 'transparent', border: 'none' }}>
+                    {masterLog}
+                  </div>
+                ) : (
+                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Transmission will arrive after session analysis.</div>
                 )}
               </div>
             </div>

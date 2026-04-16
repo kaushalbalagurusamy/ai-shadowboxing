@@ -179,7 +179,7 @@ export default function Home() {
             onClick={startSparring} 
             disabled={isLoading}
           >
-            {isLoading ? "Provisioning Session..." : "Start Sparring (P0)"}
+            {isLoading ? "Provisioning Session..." : "Date"}
           </button>
         ) : (
           <button 

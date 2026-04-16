@@ -31,6 +31,10 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [insights, setInsights] = useState<any[]>([]);
 
+  // Refs for scroll sync
+  const transcriptRef = useRef<HTMLDivElement>(null);
+  const toolsRef = useRef<HTMLDivElement>(null);
+
   // Ref to store conversationId for cleanup
   const conversationIdRef = useRef<string | null>(null);
 
@@ -44,17 +48,25 @@ export default function Home() {
         try {
           const res = await fetch(`/api/tavus/insights?conversationId=${conversationId}`);
           const data = await res.json();
-          if (data.insights) setInsights(data.insights);
+          if (data.insights) {
+            setInsights(data.insights);
+          }
         } catch (err) {
           console.error("Polling error:", err);
         }
-      }, 3000); // Poll every 3 seconds for better real-time feel
+      }, 3000); 
     }
     
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [conversationId]);
+
+  // Auto-scroll to bottom of boxes
+  useEffect(() => {
+    if (transcriptRef.current) transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
+    if (toolsRef.current) toolsRef.current.scrollTop = toolsRef.current.scrollHeight;
+  }, [insights]);
 
   const endSession = async (idToEnd: string) => {
     try {
@@ -94,7 +106,7 @@ export default function Home() {
     await endSession(conversationId);
     setConversationUrl(null);
     setIsLoading(false);
-    setActiveTab("Notes"); // Automatically switch to Notes after ending
+    setActiveTab("Notes");
   };
 
   const startSparring = async () => {
@@ -124,9 +136,10 @@ export default function Home() {
     }
   };
 
-  // Extract session summary if available
+  // Extract data for the 3 boxes
   const sessionSummary = insights.find(i => i.type === 'session_summary');
   const behavioralCues = insights.filter(i => i.type === 'behavioral_cue');
+  const transcriptTurns = insights.filter(i => i.type === 'transcript_turn');
 
   return (
     <div className="container">
@@ -213,46 +226,59 @@ export default function Home() {
             )}
           </>
         ) : (
-          <div className="notes-container">
-            {sessionSummary && sessionSummary.analysis ? (
-              <div className="notes-section">
-                <div className="notes-section-title">Raven's Final Analysis</div>
-                {Object.entries(sessionSummary.analysis).map(([key, value]: [string, any], idx) => (
-                  <div key={idx} className="insight-card">
+          <div className="notes-container" style={{ paddingBottom: '32px' }}>
+            
+            {/* Box 1: Transcript */}
+            <div className="notes-section">
+              <div className="notes-section-title">Transcript</div>
+              <div className="scroll-box" ref={transcriptRef}>
+                {transcriptTurns.length > 0 ? transcriptTurns.map((turn, idx) => (
+                  <div key={idx} className={`note-item note-item-${turn.role}`}>
+                    <div className="note-label">{turn.role === 'assistant' ? 'Partner' : 'You'}</div>
+                    {turn.text}
+                  </div>
+                )) : (
+                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Awaiting dialogue...</div>
+                )}
+              </div>
+            </div>
+
+            {/* Box 2: Tool Calls */}
+            <div className="notes-section">
+              <div className="notes-section-title">Tool Calls</div>
+              <div className="scroll-box" ref={toolsRef}>
+                {behavioralCues.length > 0 ? behavioralCues.map((cue, idx) => (
+                  <div key={idx} className="note-item note-item-signal">
+                    <div className="badge-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div className={`badge ${cue.signalType === 'negative' ? 'badge-red' : 'badge-green'}`}>
+                        {cue.category}: {cue.signalType}
+                      </div>
+                      <div className="insight-timestamp" style={{ marginTop: 0 }}>{new Date(cue.timestamp).toLocaleTimeString()}</div>
+                    </div>
+                    <div style={{ fontWeight: 600 }}>{cue.reason}</div>
+                  </div>
+                )) : (
+                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Raven is watching for cues...</div>
+                )}
+              </div>
+            </div>
+
+            {/* Box 3: Final Analysis */}
+            <div className="notes-section">
+              <div className="notes-section-title">Final Analysis</div>
+              <div className="scroll-box" style={{ maxHeight: 'none' }}>
+                {sessionSummary && sessionSummary.analysis ? Object.entries(sessionSummary.analysis).map(([key, value]: [string, any], idx) => (
+                  <div key={idx} className="note-item" style={{ background: '#ffffff', borderColor: 'var(--border)' }}>
                     <div className="badge badge-blue">{key.split(':')[0]}</div>
                     <div style={{ lineHeight: '1.4' }}>{typeof value === 'string' ? value : value.answer}</div>
                     {value.turn_id && <div className="insight-timestamp">Turn ID: {value.turn_id}</div>}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="placeholder" style={{ marginTop: '40px' }}>
-                {conversationUrl ? (
-                  <p>Raven is watching... End the session to see the final analysis.</p>
-                ) : (
-                  <p>No session notes yet. Start a date to see Raven's observations.</p>
+                )) : (
+                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Summary available after session end.</div>
                 )}
               </div>
-            )}
+            </div>
 
-            {behavioralCues.length > 0 && (
-              <div className="notes-section">
-                <div className="notes-section-title">Behavioral Signals</div>
-                <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>
-                  {[...behavioralCues].reverse().map((insight, idx) => (
-                    <div key={idx} className="insight-card">
-                      <div className={`badge ${insight.signalType === 'negative' ? 'badge-red' : 'badge-green'}`}>
-                        {insight.category}: {insight.signalType}
-                      </div>
-                      <div style={{ fontWeight: 600, marginBottom: '4px' }}>{insight.reason}</div>
-                      <div className="insight-timestamp">
-                        {new Date(insight.timestamp).toLocaleTimeString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>

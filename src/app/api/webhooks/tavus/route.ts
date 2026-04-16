@@ -21,6 +21,16 @@ export async function POST(req: Request) {
       });
     }
 
+    if (event_type === "conversation.utterance") {
+      // Real-time transcript turn
+      insightStore.addInsight(conversationId, {
+        type: "transcript_turn",
+        role: properties.role, // 'assistant' or 'user'
+        text: properties.text,
+        timestamp: properties.timestamp || new Date().toISOString()
+      });
+    }
+
     if (event_type === "conversation.perception_tool_call") {
       // Real-time signal
       const { function_name, arguments: args } = properties;

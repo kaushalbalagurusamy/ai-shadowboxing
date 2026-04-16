@@ -16,6 +16,7 @@ const CORE_AVATARS = [
 ];
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<"Date" | "Notes">("Date");
   const [replicaId, setReplicaId] = useState(CORE_AVATARS[0].id);
   const [systemPrompt, setSystemPrompt] = useState(
     "You are an attractive mid 20s woman from NYC on a first date at a coffee shop. You have a plethora of options and are initially very low interest in your date. You are a high value lawyer and are initially standoffish. Utilize your knowledge base to increase interest if and only if your date exhibits high value themselves and high charisma as defined by the knowledge base."
@@ -47,7 +48,7 @@ export default function Home() {
         } catch (err) {
           console.error("Polling error:", err);
         }
-      }, 5000); // Poll every 5 seconds
+      }, 3000); // Poll every 3 seconds for better real-time feel
     }
     
     return () => {
@@ -70,7 +71,6 @@ export default function Home() {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (conversationIdRef.current) {
-        // Use sendBeacon for more reliable cleanup on close
         const blob = new Blob(
           [JSON.stringify({ conversationId: conversationIdRef.current })],
           { type: "application/json" }
@@ -92,15 +92,16 @@ export default function Home() {
     if (!conversationId) return;
     setIsLoading(true);
     await endSession(conversationId);
-    // Don't clear conversationId immediately so we can see final summary
     setConversationUrl(null);
     setIsLoading(false);
+    setActiveTab("Notes"); // Automatically switch to Notes after ending
   };
 
   const startSparring = async () => {
     setIsLoading(true);
     setError(null);
-    setInsights([]); // Reset insights for new session
+    setInsights([]); 
+    setActiveTab("Date");
     try {
       const res = await fetch("/api/tavus", {
         method: "POST",
@@ -123,92 +124,135 @@ export default function Home() {
     }
   };
 
+  // Extract session summary if available
+  const sessionSummary = insights.find(i => i.type === 'session_summary');
+  const behavioralCues = insights.filter(i => i.type === 'behavioral_cue');
+
   return (
     <div className="container">
       <div className="sidebar">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
           <h1 style={{ marginBottom: 0 }}>AI Shadowboxing</h1>
-          <div className="badge badge-blue" style={{ marginBottom: 0 }}>Dev Mode</div>
+        </div>
+
+        <div className="tabs">
+          <div 
+            className={`tab ${activeTab === 'Date' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('Date')}
+          >
+            Date
+          </div>
+          <div 
+            className={`tab ${activeTab === 'Notes' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('Notes')}
+          >
+            Notes
+          </div>
         </div>
         
-        <div className="input-group">
-          <label htmlFor="replicaSelect">Avatar</label>
-          <select 
-            id="replicaSelect" 
-            value={replicaId} 
-            onChange={(e) => setReplicaId(e.target.value)}
-            disabled={!!conversationUrl}
-          >
-            {CORE_AVATARS.map((avatar) => (
-              <option key={avatar.id} value={avatar.id}>
-                {avatar.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="input-group">
-          <label htmlFor="personaPrompt">Prompt</label>
-          <textarea
-            id="personaPrompt"
-            value={systemPrompt}
-            onChange={(e) => setSystemPrompt(e.target.value)}
-            placeholder="Define the avatar's personality..."
-            rows={8}
-            disabled={!!conversationUrl}
-          />
-        </div>
-
-        <div className="input-group">
-          <label htmlFor="knowledgeBase">Knowledge</label>
-          <textarea
-            id="knowledgeBase"
-            value={knowledgeBase}
-            onChange={(e) => setKnowledgeBase(e.target.value)}
-            placeholder="Define the grading rubrics and contextual knowledge..."
-            rows={8}
-            disabled={!!conversationUrl}
-          />
-        </div>
-
-        {error && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
-
-        {!conversationUrl ? (
-          <button 
-            className="btn btn-primary" 
-            onClick={startSparring} 
-            disabled={isLoading}
-          >
-            {isLoading ? "Provisioning Session..." : "Date"}
-          </button>
-        ) : (
-          <button 
-            className="btn btn-danger" 
-            onClick={handleEndSessionManual}
-            disabled={isLoading}
-          >
-            {isLoading ? "Stopping Session..." : "End Session"}
-          </button>
-        )}
-
-        {/* Insight Log Panel */}
-        {insights.length > 0 && (
-          <div style={{ marginTop: '32px', borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
-            <h2 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '16px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Raven-1 Insights</h2>
-            <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>
-              {insights.map((insight, idx) => (
-                <div key={idx} className="insight-card">
-                  <div className={`badge ${insight.type === 'behavioral_cue' ? 'badge-red' : 'badge-blue'}`}>
-                    {insight.type === 'behavioral_cue' ? '🚨 CUE DETECTED' : '✅ SUMMARY'}
-                  </div>
-                  {insight.reason && <div style={{ fontWeight: 600, marginBottom: '4px' }}>{insight.reason}</div>}
-                  {insight.analysis && <div style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>{typeof insight.analysis === 'string' ? insight.analysis : JSON.stringify(insight.analysis)}</div>}
-                  <div className="insight-timestamp">
-                    {new Date(insight.timestamp).toLocaleTimeString()}
-                  </div>
-                </div>
-              ))}
+        {activeTab === 'Date' ? (
+          <>
+            <div className="input-group">
+              <label htmlFor="replicaSelect">Avatar</label>
+              <select 
+                id="replicaSelect" 
+                value={replicaId} 
+                onChange={(e) => setReplicaId(e.target.value)}
+                disabled={!!conversationUrl}
+              >
+                {CORE_AVATARS.map((avatar) => (
+                  <option key={avatar.id} value={avatar.id}>
+                    {avatar.name}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            <div className="input-group">
+              <label htmlFor="personaPrompt">Prompt</label>
+              <textarea
+                id="personaPrompt"
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                placeholder="Define the avatar's personality..."
+                rows={6}
+                disabled={!!conversationUrl}
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="knowledgeBase">Knowledge</label>
+              <textarea
+                id="knowledgeBase"
+                value={knowledgeBase}
+                onChange={(e) => setKnowledgeBase(e.target.value)}
+                placeholder="Define the grading rubrics and contextual knowledge..."
+                rows={6}
+                disabled={!!conversationUrl}
+              />
+            </div>
+
+            {error && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
+
+            {!conversationUrl ? (
+              <button 
+                className="btn btn-primary" 
+                onClick={startSparring} 
+                disabled={isLoading}
+              >
+                {isLoading ? "Provisioning..." : "Date"}
+              </button>
+            ) : (
+              <button 
+                className="btn btn-danger" 
+                onClick={handleEndSessionManual}
+                disabled={isLoading}
+              >
+                {isLoading ? "Ending..." : "End Session"}
+              </button>
+            )}
+          </>
+        ) : (
+          <div className="notes-container">
+            {sessionSummary && sessionSummary.analysis ? (
+              <div className="notes-section">
+                <div className="notes-section-title">Raven's Final Analysis</div>
+                {Object.entries(sessionSummary.analysis).map(([key, value]: [string, any], idx) => (
+                  <div key={idx} className="insight-card">
+                    <div className="badge badge-blue">{key.split(':')[0]}</div>
+                    <div style={{ lineHeight: '1.4' }}>{typeof value === 'string' ? value : value.answer}</div>
+                    {value.turn_id && <div className="insight-timestamp">Turn ID: {value.turn_id}</div>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="placeholder" style={{ marginTop: '40px' }}>
+                {conversationUrl ? (
+                  <p>Raven is watching... End the session to see the final analysis.</p>
+                ) : (
+                  <p>No session notes yet. Start a date to see Raven's observations.</p>
+                )}
+              </div>
+            )}
+
+            {behavioralCues.length > 0 && (
+              <div className="notes-section">
+                <div className="notes-section-title">Behavioral Signals</div>
+                <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {[...behavioralCues].reverse().map((insight, idx) => (
+                    <div key={idx} className="insight-card">
+                      <div className={`badge ${insight.signalType === 'negative' ? 'badge-red' : 'badge-green'}`}>
+                        {insight.category}: {insight.signalType}
+                      </div>
+                      <div style={{ fontWeight: 600, marginBottom: '4px' }}>{insight.reason}</div>
+                      <div className="insight-timestamp">
+                        {new Date(insight.timestamp).toLocaleTimeString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -222,7 +266,7 @@ export default function Home() {
           />
         ) : (
           <div className="placeholder">
-            <p>Configure persona and knowledge base, then click <b>Start Sparring</b>.</p>
+            <p>Configure persona and knowledge base, then click <b>Date</b>.</p>
             <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>Waiting for WebRTC stream...</p>
           </div>
         )}

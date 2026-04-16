@@ -26,25 +26,26 @@ export async function POST(req: Request) {
           perception: {
             perception_model: "raven-1",
             perception_analysis_queries: [
-              "Did the user maintain consistent eye contact throughout the conversation?",
-              "Did the user exhibit any signs of nervousness like touching their face or fidgeting?",
-              "How would you rate the user's postural confidence?",
-              "At what moments did the user seem most challenged or hesitant?"
+              "User Appearance: Describe the user's physical presentation, clothing, and overall physique in relation to the 'physique' rubric.",
+              "User Behavior \u0026 Demeanor: Analyze specific behavioral cues like eye contact, fidgeting, and posture in relation to the 'Confidence' and 'Assertiveness' rubrics.",
+              "Emotional State: Evaluate the user's emotional intelligence (EQ) and IQ based on their responses, tone, and facial expressions.",
+              "Screen Activities: Note any external distractions or screen-related behavior (e.g., looking away at another monitor) that affects their engagement level."
             ],
-            visual_tool_prompt: "You have tools to detect specific behavioral signals. Use them when you see a clear lapse in confidence or an exceptionally strong conversational moment.",
+            visual_tool_prompt: "You have tools to detect specific behavioral signals based on the provided Knowledge Base (EQ, IQ, wealth, and physique). Use them to log real-time insights when the user displays high or low value traits.",
             visual_tools: [
               {
                 "type": "function",
                 "function": {
-                  "name": "log_confidence_lapse",
-                  "description": "Triggered when the user breaks eye contact, hesitates significantly, or uses filler words repeatedly.",
+                  "name": "log_behavioral_signal",
+                  "description": "Triggered when the user displays a clear signal of high or low value (EQ, IQ, wealth, physique) as defined in the rubrics.",
                   "parameters": {
                     "type": "object",
                     "properties": {
-                      "reason": { "type": "string", "description": "Specific reason for the lapse (e.g., eye contact break)." },
-                      "severity": { "type": "string", "enum": ["low", "medium", "high"] }
+                      "category": { "type": "string", "enum": ["EQ", "IQ", "wealth", "physique"] },
+                      "signal_type": { "type": "string", "enum": ["positive", "negative"] },
+                      "reason": { "type": "string", "description": "Description of the specific signal observed." }
                     },
-                    "required": ["reason"]
+                    "required": ["category", "signal_type", "reason"]
                   }
                 }
               }
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
         persona_id: personaData.persona_id,
         conversation_name: "Phase 1 Demo Session",
         enable_recording: false, // Cloud recording requires AWS S3 config which is not yet provided
-        // callback_url: "https://your-domain.com/api/webhooks/tavus" // Requires public URL (e.g. via ngrok)
+        callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`
       })
     });
 

@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       // Session ended. Store the final analysis.
       insightStore.addInsight(conversationId, {
         type: "session_summary",
-        analysis: properties.perception_analysis,
+        analysis: properties.perception_analysis, // This contains the answers to the queries
         recordingUrl: properties.recording_url,
         timestamp: new Date().toISOString()
       });
@@ -23,12 +23,26 @@ export async function POST(req: Request) {
 
     if (event_type === "conversation.perception_tool_call") {
       // Real-time signal
-      insightStore.addInsight(conversationId, {
-        type: "behavioral_cue",
-        reason: properties.arguments?.reason,
-        timestamp: properties.timestamp,
-        imageFrame: properties.image_frame // Raven provides base64 image here
-      });
+      const { function_name, arguments: args } = properties;
+      
+      if (function_name === "log_behavioral_signal") {
+        insightStore.addInsight(conversationId, {
+          type: "behavioral_cue",
+          category: args.category,
+          signalType: args.signal_type,
+          reason: args.reason,
+          timestamp: properties.timestamp,
+          imageFrame: properties.image_frame
+        });
+      } else {
+        // Fallback for any other tools
+        insightStore.addInsight(conversationId, {
+          type: "behavioral_cue",
+          reason: args?.reason || "Observation detected",
+          timestamp: properties.timestamp,
+          imageFrame: properties.image_frame
+        });
+      }
     }
 
     return NextResponse.json({ received: true });

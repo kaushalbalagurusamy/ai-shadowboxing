@@ -26,10 +26,10 @@ export async function POST(req: Request) {
           perception: {
             perception_model: "raven-1",
             perception_analysis_queries: [
-              "User Appearance: Describe the user's physical presentation, clothing, and overall physique in relation to the 'physique' rubric.",
-              "User Behavior \u0026 Demeanor: Analyze specific behavioral cues like eye contact, fidgeting, and posture in relation to the 'Confidence' and 'Assertiveness' rubrics.",
-              "Emotional State: Evaluate the user's emotional intelligence (EQ) and IQ based on their responses, tone, and facial expressions.",
-              "Screen Activities: Note any external distractions or screen-related behavior (e.g., looking away at another monitor) that affects their engagement level."
+              "Physique \u0026 Presence: Analyze the user's physical presence, posture, and symmetry. Do they exhibit high-value 'physique' markers or do they appear low-energy/unpolished? Reference timestamps of postural shifts.",
+              "EQ \u0026 Composure: Evaluate the user's EQ specifically in response to your standoffishness. Did they react with nervous laughter/stuttering (low value) or remain calm and fluid (high value)? Map these to specific turns.",
+              "IQ \u0026 Wealth Inferences: Based on vocabulary, conversational depth, and mentions of career/lifestyle, what is the inferred value? Note any over-compensation or 'bold claims' that feel fabricated vs verified.",
+              "Screen-Based Authenticity: Note any screen-related behavior indicating a lack of presence (reading notes, looking at other monitors). Does the user's vocal pitch and eye contact suggest they are playing a 'fake deep guy' persona?"
             ],
             visual_tool_prompt: "You have tools to detect specific behavioral signals based on the provided Knowledge Base (EQ, IQ, wealth, and physique). Use them to log real-time insights when the user displays high or low value traits.",
             visual_tools: [

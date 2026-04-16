@@ -126,10 +126,13 @@ export default function Home() {
   return (
     <div className="container">
       <div className="sidebar">
-        <h1>AI Shadowboxing</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+          <h1 style={{ marginBottom: 0 }}>AI Shadowboxing</h1>
+          <div className="badge badge-blue" style={{ marginBottom: 0 }}>Dev Mode</div>
+        </div>
         
         <div className="input-group">
-          <label htmlFor="replicaSelect">Sparring Partner (Avatar)</label>
+          <label htmlFor="replicaSelect">Avatar</label>
           <select 
             id="replicaSelect" 
             value={replicaId} 
@@ -145,7 +148,7 @@ export default function Home() {
         </div>
 
         <div className="input-group">
-          <label htmlFor="personaPrompt">Persona Prompt</label>
+          <label htmlFor="personaPrompt">Prompt</label>
           <textarea
             id="personaPrompt"
             value={systemPrompt}
@@ -157,7 +160,7 @@ export default function Home() {
         </div>
 
         <div className="input-group">
-          <label htmlFor="knowledgeBase">Knowledge Base (Rubrics)</label>
+          <label htmlFor="knowledgeBase">Knowledge</label>
           <textarea
             id="knowledgeBase"
             value={knowledgeBase}
@@ -168,11 +171,11 @@ export default function Home() {
           />
         </div>
 
-        {error && <div style={{ color: "var(--danger)", marginBottom: "16px" }}>Error: {error}</div>}
+        {error && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
 
         {!conversationUrl ? (
           <button 
-            className="btn" 
+            className="btn btn-primary" 
             onClick={startSparring} 
             disabled={isLoading}
           >
@@ -180,8 +183,7 @@ export default function Home() {
           </button>
         ) : (
           <button 
-            className="btn" 
-            style={{ backgroundColor: "var(--danger)" }}
+            className="btn btn-danger" 
             onClick={handleEndSessionManual}
             disabled={isLoading}
           >
@@ -191,23 +193,17 @@ export default function Home() {
 
         {/* Insight Log Panel */}
         {insights.length > 0 && (
-          <div style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-            <h2 style={{ fontSize: '1rem', marginBottom: '10px' }}>Raven-1 Insights</h2>
-            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+          <div style={{ marginTop: '32px', borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
+            <h2 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '16px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Raven-1 Insights</h2>
+            <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>
               {insights.map((insight, idx) => (
-                <div key={idx} style={{ 
-                  backgroundColor: 'rgba(255,255,255,0.05)', 
-                  padding: '10px', 
-                  borderRadius: '4px', 
-                  marginBottom: '8px',
-                  fontSize: '0.8rem'
-                }}>
-                  <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
-                    {insight.type === 'behavioral_cue' ? '🚨 CUE DETECTED' : '✅ SESSION SUMMARY'}
+                <div key={idx} className="insight-card">
+                  <div className={`badge ${insight.type === 'behavioral_cue' ? 'badge-red' : 'badge-blue'}`}>
+                    {insight.type === 'behavioral_cue' ? '🚨 CUE DETECTED' : '✅ SUMMARY'}
                   </div>
-                  {insight.reason && <div>Reason: {insight.reason}</div>}
-                  {insight.analysis && <div>Summary: {JSON.stringify(insight.analysis)}</div>}
-                  <div style={{ opacity: 0.5, fontSize: '0.7rem' }}>
+                  {insight.reason && <div style={{ fontWeight: 600, marginBottom: '4px' }}>{insight.reason}</div>}
+                  {insight.analysis && <div style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>{typeof insight.analysis === 'string' ? insight.analysis : JSON.stringify(insight.analysis)}</div>}
+                  <div className="insight-timestamp">
                     {new Date(insight.timestamp).toLocaleTimeString()}
                   </div>
                 </div>

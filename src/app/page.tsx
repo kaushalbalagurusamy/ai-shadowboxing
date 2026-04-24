@@ -282,7 +282,7 @@ export default function Home() {
           </>
         )}
 
-        {activeTab === 'Mentor' && (
+        {activeTab === 'Mentor' ? (
           <>
             <div className="input-group">
               <label htmlFor="mentorAvatarSelect">Mentor Avatar</label>

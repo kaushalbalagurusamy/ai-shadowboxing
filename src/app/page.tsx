@@ -150,7 +150,8 @@ export default function Home() {
     setIsLoading(false);
     setActiveTab("Notes");
     
-    // Trigger Gemini synthesis
+    // Proactive Synthesis: Trigger Gemini analysis automatically after a 3s buffer
+    // to ensure final webhooks (transcript/insights) have landed in our store.
     setTimeout(() => runSynthesis(conversationId), 3000);
   };
 
@@ -326,14 +327,30 @@ export default function Home() {
             {error && activeTab === 'Mentor' && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
 
             {!conversationUrl ? (
-              <button 
-                className="btn btn-primary" 
-                onClick={() => startSession(mentorPrompt, mentorKnowledgeBase, 'Mentor')} 
-                disabled={isLoading || mentorPrompt.includes("Select a date session")}
-                style={{ background: 'var(--pastel-green)', color: 'var(--pastel-green-text)', borderColor: 'transparent' }}
-              >
-                {isLoading ? "Provisioning..." : "Learn"}
-              </button>
+              <div className="mentor-status" style={{ marginTop: '16px', padding: '16px', borderRadius: '8px', background: 'rgba(0,0,0,0.03)', border: '1px dashed var(--border)' }}>
+                {isSynthesizing ? (
+                  <div style={{ color: 'var(--pastel-green-text)', fontWeight: 600 }}>
+                    <span className="pulse">●</span> Synthesis in progress...
+                  </div>
+                ) : synthesis ? (
+                  <div>
+                    <div style={{ color: 'var(--pastel-green-text)', fontWeight: 600, marginBottom: '8px' }}>
+                      ✓ Knowledge Loaded
+                    </div>
+                    <button 
+                      className="btn btn-primary" 
+                      onClick={() => startSession(mentorPrompt, mentorKnowledgeBase, 'Mentor')} 
+                      style={{ background: 'var(--pastel-green)', color: 'var(--pastel-green-text)', borderColor: 'transparent', width: '100%' }}
+                    >
+                      {isLoading ? "Provisioning..." : "Chat with Mentor"}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>
+                    The Mentor is watching. Finish your Date to trigger synthesis.
+                  </div>
+                )}
+              </div>
             ) : (
               <button 
                 className="btn btn-danger" 
@@ -344,7 +361,7 @@ export default function Home() {
               </button>
             )}
           </>
-        )}
+        ) : null}
 
         {activeTab === 'Notes' && (
           <div className="notes-container" style={{ paddingBottom: '32px' }}>
@@ -451,7 +468,7 @@ export default function Home() {
           />
         ) : (
           <div className="placeholder">
-            <p>Configure persona and knowledge base, then click <b>{activeTab === 'Mentor' ? 'Learn' : 'Date'}</b>.</p>
+            <p>Configure persona and knowledge base, then click <b>Date</b>.</p>
             <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>Waiting for WebRTC stream...</p>
           </div>
         )}

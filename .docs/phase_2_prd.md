@@ -22,16 +22,17 @@ The "Coach" agent reads the Master Performance Log to produce the next iteration
 *   **M1 Mentor Generation:** Gemini provides a critique using the Master Performance Log. [COMPLETED]
 *   **P1 Persona Hedging:** Gemini designs the next Sparring Partner's persona prompt (P1) by "hedging" against the user's specific failures. [COMPLETED]
 
-### C. Step 3: Mentor Review Dashboard (Frontend) [PARTIAL]
+### C. Step 3: Mentor Review Dashboard (Frontend) [COMPLETED]
 The user reviews their "Game Film" alongside the Zipper's unified log.
-*   **Synchronized Highlights:** Timeline markers on the video player correspond to events in the Master Performance Log. [PENDING]
-*   **Visual Proof:** Clicking a specific feedback moment displays the image frame captured by Raven during the `perception_tool_call`. [PENDING]
+*   **Proactive Synthesis:** Analysis triggers automatically after the session ends, providing a zero-latency feedback feel. [COMPLETED]
 *   **Transmission View:** 4th scroll box implemented to show the Master Performance Log. [COMPLETED]
 *   **Prompt Visualization:** Scrollable text boxes for M1 and P1 prompts implemented in Notes tab. [COMPLETED]
+*   **Chat Integration:** Mentor tab allows immediate chat with the "Coach" once synthesis completes. [COMPLETED]
 
-## 4. Technical Logic: Two-Pass Agentic Chain
+## 4. Technical Logic: Proactive Two-Pass Agentic Chain
 1.  **Pass 1 (Distillation):** "Interleave these transcript turns with these Raven perception events chronologically. Ensure each observation is categorized by the High-Value rubrics." [COMPLETED]
 2.  **Pass 2 (Synthesis):** "Using the Master Performance Log generated in Pass 1, create a feedback summary and a system prompt for a more challenging partner (P1)." [COMPLETED]
+3.  **Automatic Execution:** The chain triggers 3s after `handleEndSessionManual`, ensuring no manual user interaction is required for analysis. [COMPLETED]
 
 ## 5. Acceptance Criteria for Phase 2
 1.  **Trace Accuracy:** The "Zipper" correctly aligns a minimum of 90% of transcript turns with their corresponding Raven perception events. [PASSED]

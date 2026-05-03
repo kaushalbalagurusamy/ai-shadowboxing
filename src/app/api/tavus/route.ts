@@ -69,7 +69,6 @@ export async function POST(req: Request) {
         replica_id: replicaId || "r9d30b0e55ac",
         persona_id: personaData.persona_id,
         conversation_name: "Phase 1 Demo Session",
-        enable_recording: false, // Cloud recording requires AWS S3 config which is not yet provided
         callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`
       })
     });

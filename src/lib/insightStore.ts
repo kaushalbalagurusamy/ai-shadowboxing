@@ -1,31 +1,72 @@
-// Global singleton to hold session insights during development
-// In a production app, this would be a database or Redis
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize the Supabase client
+// For edge/serverless functions, we want to ensure we use the service role key to bypass RLS if needed,
+// but the frontend (which imports this file) might only have NEXT_PUBLIC_SUPABASE_URL.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
 class InsightStore {
-  private insights: Record<string, any[]> = {};
-
-  addInsight(conversationId: string, insight: any) {
-    if (!this.insights[conversationId]) {
-      this.insights[conversationId] = [];
+  // Add a new insight to the Supabase table
+  async addInsight(conversationId: string, insight: any) {
+    if (!supabase) {
+      console.warn("Supabase client not initialized. Dropping insight:", insight);
+      return;
     }
-    this.insights[conversationId].push(insight);
-  }
 
-  getInsights(conversationId: string) {
-    return this.insights[conversationId] || [];
-  }
+    try {
+      const { error } = await supabase
+        .from('insights')
+        .insert([
+          { 
+            conversation_id: conversationId, 
+            type: insight.type || 'unknown',
+            data: insight 
+          }
+        ]);
 
-  setMetadata(conversationId: string, key: string, value: any) {
-    if (!this.insights[conversationId]) {
-      this.insights[conversationId] = [];
+      if (error) {
+        console.error('Error inserting insight into Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Failed to add insight:', err);
     }
-    // Store metadata as a special type or in a separate map. 
-    // For simplicity in this dev singleton, we'll push it as a special object.
-    this.addInsight(conversationId, { type: 'metadata', key, value });
   }
 
-  getMetadata(conversationId: string, key: string) {
-    const insights = this.getInsights(conversationId);
-    const meta = insights.find(i => i.type === 'metadata' && i.key === key);
+  // Get all insights for a specific conversation
+  async getInsights(conversationId: string) {
+    if (!supabase) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from('insights')
+        .select('data')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching insights from Supabase:', error);
+        return [];
+      }
+
+      return data ? data.map((row) => row.data) : [];
+    } catch (err) {
+      console.error('Failed to get insights:', err);
+      return [];
+    }
+  }
+
+  // Helper method for setting metadata (which just adds a special insight type)
+  async setMetadata(conversationId: string, key: string, value: any) {
+    await this.addInsight(conversationId, { type: 'metadata', key, value });
+  }
+
+  // Get a specific metadata value
+  async getMetadata(conversationId: string, key: string) {
+    const insights = await this.getInsights(conversationId);
+    const meta = insights.find((i: any) => i.type === 'metadata' && i.key === key);
     return meta ? meta.value : null;
   }
 }

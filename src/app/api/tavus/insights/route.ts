@@ -9,6 +9,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing conversationId" }, { status: 400 });
   }
 
-  const insights = insightStore.getInsights(conversationId);
+  const insights = await insightStore.getInsights(conversationId);
   return NextResponse.json({ insights });
 }

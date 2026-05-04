@@ -10,8 +10,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing conversationId" }, { status: 400 });
     }
 
-    const insights = insightStore.getInsights(conversationId);
-    const knowledgeBase = insightStore.getMetadata(conversationId, 'knowledge_base');
+    const insights = await insightStore.getInsights(conversationId);
+    const knowledgeBase = await insightStore.getMetadata(conversationId, 'knowledge_base');
     
     if (insights.length === 0) {
       return NextResponse.json({ error: "No data found for this session." }, { status: 404 });
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
     const coachData = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(coachDataRaw);
 
     // Store synthesis results
-    insightStore.setMetadata(conversationId, 'session_synthesis', coachData);
+    await insightStore.setMetadata(conversationId, 'session_synthesis', coachData);
     
     return NextResponse.json({ 
       success: true,

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
     if (event_type === "system.shutdown") {
       // Session ended. Store the final analysis.
-      insightStore.addInsight(conversationId, {
+      await insightStore.addInsight(conversationId, {
         type: "session_summary",
         analysis: properties.perception_analysis, // This contains the answers to the queries
         recordingUrl: properties.recording_url,
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     if (event_type === "conversation.utterance") {
       // Real-time transcript turn
-      insightStore.addInsight(conversationId, {
+      await insightStore.addInsight(conversationId, {
         type: "transcript_turn",
         role: properties.role, // 'assistant' or 'user'
         text: properties.text,
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       const { function_name, arguments: args } = properties;
       
       if (function_name === "log_behavioral_signal") {
-        insightStore.addInsight(conversationId, {
+        await insightStore.addInsight(conversationId, {
           type: "behavioral_cue",
           category: args.category,
           signalType: args.signal_type,
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         });
       } else {
         // Fallback for any other tools
-        insightStore.addInsight(conversationId, {
+        await insightStore.addInsight(conversationId, {
           type: "behavioral_cue",
           reason: args?.reason || "Observation detected",
           timestamp: properties.timestamp,

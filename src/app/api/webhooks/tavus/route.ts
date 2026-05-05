@@ -74,6 +74,30 @@ export async function POST(req: Request) {
       }
     }
 
+    // Agentic Termination Handler
+    if (event_type === "conversation.tool_call" && properties.function_name === "end_conversation") {
+      const reason = properties.arguments?.reason || "No reason provided";
+      console.log(`AGENT REQUESTED HANG UP: ${reason} for ${conversationId}`);
+      
+      // 1. Log the termination as a definitive "Value Leak" behavioral cue
+      await insightStore.addInsight(conversationId, {
+        type: "behavioral_cue",
+        category: "Final Outcome",
+        signalType: "negative",
+        reason: `Date terminated by AI: ${reason}`,
+        timestamp: new Date().toISOString()
+      });
+
+      // 2. Actually kill the call via Tavus API
+      const apiKey = process.env.TAVUS_API_KEY;
+      if (apiKey) {
+        await fetch(`https://tavusapi.com/v2/conversations/${conversationId}/end`, {
+          method: "POST",
+          headers: { "x-api-key": apiKey }
+        });
+      }
+    }
+
     return NextResponse.json({ received: true });
 
   } catch (error: any) {

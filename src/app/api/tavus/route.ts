@@ -20,9 +20,27 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         persona_name: "P0_Baseline_Sparring_Partner",
-        system_prompt: combinedPrompt,
+        system_prompt: `${combinedPrompt}\n\nIMPORTANT: If the user fails to respond or remains silent for more than 10 seconds, or if you decide the date is over based on your rubrics, you must verbally excuse yourself and immediately call the 'end_conversation' tool.`,
         pipeline_mode: "full",
         layers: {
+          llm: {
+            tools: [
+              {
+                "type": "function",
+                "function": {
+                  "name": "end_conversation",
+                  "description": "Call this tool immediately when you decide the date is over or when the user is inactive for more than 10 seconds. This will hang up the call.",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "reason": { "type": "string", "description": "The reason for ending the date (e.g., 'User Inactivity', 'Low Interest', 'Natural Conclusion')." }
+                    },
+                    "required": ["reason"]
+                  }
+                }
+              }
+            ]
+          },
           perception: {
             perception_model: "raven-1",
             perception_analysis_queries: [
@@ -69,7 +87,12 @@ export async function POST(req: Request) {
         replica_id: replicaId || "r9d30b0e55ac",
         persona_id: personaData.persona_id,
         conversation_name: "Phase 1 Demo Session",
-        callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`
+        callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`,
+        properties: {
+          max_call_duration: 600, // 10 minute cap
+          participant_left_timeout: 10, // kill if user drops
+          participant_absent_timeout: 30 // kill if never joined
+        }
       })
     });
 

@@ -29,3 +29,6 @@ When operating autonomously, adhere to the following workflow:
 3. **Descriptive Intent:** Commit messages must explain the *why* behind architectural decisions, not just list the files changed.
 4. **Terminal Review Handoff:** When a task is complete, do NOT push to a remote or open a PR. Instead, pause and notify the user that the branch is ready for local review (e.g., via `git diff main` or `git log -p`).
 5. **Local Merge:** Only merge into `main` locally once the human user has explicitly approved the changes in the CLI.
+6. **Deployment & Remote Sync:** Once changes are merged into `main`, you MUST autonomously:
+    - Push the updated `main` branch to the remote repository.
+    - Trigger a Vercel deployment (`mcp_vercel_deploy_to_vercel`) to ensure the live environment reflects the latest verified state.

@@ -1,17 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize the Supabase client
-// For edge/serverless functions, we want to ensure we use the service role key to bypass RLS if needed,
-// but the frontend (which imports this file) might only have NEXT_PUBLIC_SUPABASE_URL.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+// Create two clients: one for the browser (respects RLS) and one for the server (bypasses RLS)
+export const supabaseClient = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+export const supabaseAdmin = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
+
+// Use the appropriate client based on context
+const getSupabase = () => {
+  // If we are on the server and have a service key, use admin
+  if (typeof window === 'undefined' && supabaseAdmin) {
+    return supabaseAdmin;
+  }
+  return supabaseClient;
+};
 
 class InsightStore {
   // Upload a video clip to Supabase Storage
   async uploadVideo(conversationId: string, videoUrl: string): Promise<string | null> {
-    if (!supabase) return videoUrl; // fallback to original if supabase not ready
+    const supabase = getSupabase();
+    if (!supabase) return videoUrl;
 
     try {
       const videoRes = await fetch(videoUrl);
@@ -40,6 +50,7 @@ class InsightStore {
 
   // Add a new insight to the Supabase table
   async addInsight(conversationId: string, insight: any) {
+    const supabase = getSupabase();
     if (!supabase) {
       console.warn("Supabase client not initialized. Dropping insight:", insight);
       return;
@@ -66,6 +77,7 @@ class InsightStore {
 
   // Get all insights for a specific conversation
   async getInsights(conversationId: string) {
+    const supabase = getSupabase();
     if (!supabase) return [];
 
     try {
@@ -87,7 +99,7 @@ class InsightStore {
     }
   }
 
-  // Helper method for setting metadata (which just adds a special insight type)
+  // Helper method for setting metadata
   async setMetadata(conversationId: string, key: string, value: any) {
     await this.addInsight(conversationId, { type: 'metadata', key, value });
   }

@@ -48,6 +48,20 @@ export default function Home() {
   // Ref to store conversationId for cleanup
   const conversationIdRef = useRef<string | null>(null);
 
+  // Listen for messages from the Tavus iframe (Interactions Protocol)
+  useEffect(() => {
+    const handleTavusMessage = (event: MessageEvent) => {
+      // Tavus emits events via postMessage when tools are called
+      if (event.data?.event_type === 'conversation.tool_call' && event.data?.name === 'end_conversation') {
+        console.log("AI requested to hang up via Client Tool Call. Ending session...");
+        handleEndSessionManual();
+      }
+    };
+
+    window.addEventListener('message', handleTavusMessage);
+    return () => window.removeEventListener('message', handleTavusMessage);
+  }, [conversationId]);
+
   useEffect(() => {
     conversationIdRef.current = conversationId;
     

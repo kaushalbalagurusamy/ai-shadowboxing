@@ -12,11 +12,17 @@ export async function POST(req: Request) {
     if (!conversationId) return NextResponse.json({ received: true });
 
     if (event_type === "system.shutdown") {
-      // Session ended. Store the final analysis.
+      // Session ended. Upload the video if available.
+      let finalRecordingUrl = properties.recording_url;
+      if (finalRecordingUrl) {
+        finalRecordingUrl = await insightStore.uploadVideo(conversationId, finalRecordingUrl);
+      }
+
+      // Store the final analysis.
       await insightStore.addInsight(conversationId, {
         type: "session_summary",
         analysis: properties.perception_analysis, // This contains the answers to the queries
-        recordingUrl: properties.recording_url,
+        recordingUrl: finalRecordingUrl,
         timestamp: new Date().toISOString()
       });
     }

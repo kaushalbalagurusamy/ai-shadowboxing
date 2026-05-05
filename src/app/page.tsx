@@ -43,6 +43,7 @@ export default function Home() {
   // Refs for scroll sync
   const transcriptRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Ref to store conversationId for cleanup
   const conversationIdRef = useRef<string | null>(null);
@@ -189,6 +190,16 @@ export default function Home() {
   const sessionSummary = insights.find(i => i.type === 'session_summary');
   const behavioralCues = insights.filter(i => i.type === 'behavioral_cue');
   const transcriptTurns = insights.filter(i => i.type === 'transcript_turn');
+
+  const firstInsight = transcriptTurns.length > 0 ? transcriptTurns[0] : (behavioralCues.length > 0 ? behavioralCues[0] : null);
+  const startTime = firstInsight ? new Date(firstInsight.timestamp).getTime() : null;
+
+  const handleCueClick = (timestamp: string) => {
+    if (!startTime || !videoRef.current) return;
+    const offsetSeconds = Math.max(0, (new Date(timestamp).getTime() - startTime) / 1000);
+    videoRef.current.currentTime = offsetSeconds;
+    videoRef.current.play().catch(e => console.error("Playback failed:", e));
+  };
 
   return (
     <div className="container">
@@ -366,6 +377,19 @@ export default function Home() {
         {activeTab === 'Notes' && (
           <div className="notes-container" style={{ paddingBottom: '32px' }}>
             
+            {sessionSummary?.recordingUrl && (
+              <div className="notes-section">
+                <div className="notes-section-title">Session Recording</div>
+                <video 
+                  ref={videoRef} 
+                  src={sessionSummary.recordingUrl} 
+                  controls 
+                  style={{ width: '100%', borderRadius: '8px', marginBottom: '8px', background: '#000' }}
+                />
+                <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>Click on any Tool Call below to jump to that moment in the video.</div>
+              </div>
+            )}
+
             <div className="notes-section">
               <div className="notes-section-title">Transcript</div>
               <div className="scroll-box" ref={transcriptRef}>
@@ -384,12 +408,20 @@ export default function Home() {
               <div className="notes-section-title">Tool Calls</div>
               <div className="scroll-box" ref={toolsRef}>
                 {behavioralCues.length > 0 ? behavioralCues.map((cue, idx) => (
-                  <div key={idx} className="note-item note-item-signal">
+                  <div 
+                    key={idx} 
+                    className="note-item note-item-signal" 
+                    style={{ cursor: sessionSummary?.recordingUrl ? 'pointer' : 'default' }}
+                    onClick={() => handleCueClick(cue.timestamp)}
+                  >
                     <div className="badge-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <div className={`badge ${cue.signalType === 'negative' ? 'badge-red' : 'badge-green'}`}>
                         {cue.category}: {cue.signalType}
                       </div>
-                      <div className="insight-timestamp" style={{ marginTop: 0 }}>{new Date(cue.timestamp).toLocaleTimeString()}</div>
+                      <div className="insight-timestamp" style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {sessionSummary?.recordingUrl && <span>▶</span>}
+                        {new Date(cue.timestamp).toLocaleTimeString()}
+                      </div>
                     </div>
                     <div style={{ fontWeight: 600 }}>{cue.reason}</div>
                   </div>
@@ -440,6 +472,17 @@ export default function Home() {
                     <div className="note-item" style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', background: '#ffffff', borderColor: 'var(--border)' }}>
                       <div className="note-label">Next Partner Prompt (P1)</div>
                       {synthesis.next_partner_prompt.system_instruction}
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ marginTop: '12px', fontSize: '0.75rem', padding: '6px 12px', width: 'auto' }}
+                        onClick={() => {
+                          setSystemPrompt(synthesis.next_partner_prompt.system_instruction);
+                          setActiveTab('Date');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                      >
+                        Apply P1 to Next Date
+                      </button>
                     </div>
 
                     <details style={{ marginTop: '8px' }}>

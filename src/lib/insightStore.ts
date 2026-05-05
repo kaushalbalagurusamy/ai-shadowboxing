@@ -9,6 +9,35 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PU
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 class InsightStore {
+  // Upload a video clip to Supabase Storage
+  async uploadVideo(conversationId: string, videoUrl: string): Promise<string | null> {
+    if (!supabase) return videoUrl; // fallback to original if supabase not ready
+
+    try {
+      const videoRes = await fetch(videoUrl);
+      const videoArrayBuffer = await videoRes.arrayBuffer();
+      const fileName = `${conversationId}.mp4`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('video-clips')
+        .upload(fileName, videoArrayBuffer, {
+          contentType: 'video/mp4',
+          upsert: true
+        });
+        
+      if (!uploadError) {
+        const { data } = supabase.storage.from('video-clips').getPublicUrl(fileName);
+        return data.publicUrl;
+      } else {
+        console.error('Supabase storage upload error:', uploadError);
+        return videoUrl;
+      }
+    } catch (err) {
+      console.error('Failed to upload video to Supabase:', err);
+      return videoUrl;
+    }
+  }
+
   // Add a new insight to the Supabase table
   async addInsight(conversationId: string, insight: any) {
     if (!supabase) {

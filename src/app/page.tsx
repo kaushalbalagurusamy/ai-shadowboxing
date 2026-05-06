@@ -51,10 +51,13 @@ export default function Home() {
   // Listen for messages from the Tavus iframe (Interactions Protocol)
   useEffect(() => {
     const handleTavusMessage = (event: MessageEvent) => {
-      // Tavus emits events via postMessage when tools are called
-      if (event.data?.event_type === 'conversation.tool_call' && event.data?.name === 'end_conversation') {
-        console.log("AI requested to hang up via Client Tool Call. Ending session...");
-        handleEndSessionManual();
+      // Tavus emits events via postMessage when tools are called or state changes
+      if (
+        (event.data?.event_type === 'conversation.tool_call' && event.data?.name === 'end_conversation') ||
+        (event.data?.event_type === 'conversation.participant_left')
+      ) {
+        console.log(`Session end event detected: ${event.data?.event_type}. Ending session...`);
+        terminateSession();
       }
     };
 
@@ -157,19 +160,18 @@ export default function Home() {
     };
   }, []);
 
-  const handleEndSessionManual = async () => {
-    if (!conversationId) return;
-    setIsLoading(true);
-    await endSession(conversationId);
-    setConversationUrl(null);
-    setIsLoading(false);
-    setActiveTab("Notes");
-    
-    // Proactive Synthesis: Trigger Gemini analysis automatically after a 3s buffer
-    // to ensure final webhooks (transcript/insights) have landed in our store.
-    setTimeout(() => runSynthesis(conversationId), 3000);
-  };
+  const terminateSession = async () => {
+   if (!conversationId) return;
+   setIsLoading(true);
+   await endSession(conversationId);
+   setConversationUrl(null);
+   setIsLoading(false);
+   setActiveTab("Notes");
 
+   // Proactive Synthesis: Trigger Gemini analysis automatically after a 3s buffer
+   // to ensure final webhooks (transcript/insights) have landed in our store.
+   setTimeout(() => runSynthesis(conversationId), 3000);
+  };
   const startSession = async (prompt: string, kb: string, label: string) => {
     setIsLoading(true);
     setError(null);
@@ -287,21 +289,13 @@ export default function Home() {
 
             {error && activeTab === 'Date' && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
 
-            {!conversationUrl ? (
+            {!conversationUrl && (
               <button 
                 className="btn btn-primary" 
                 onClick={() => startSession(systemPrompt, knowledgeBase, 'Date')} 
                 disabled={isLoading}
               >
                 {isLoading ? "Provisioning..." : "Date"}
-              </button>
-            ) : (
-              <button 
-                className="btn btn-danger" 
-                onClick={handleEndSessionManual}
-                disabled={isLoading}
-              >
-                {isLoading ? "Ending..." : "End Session"}
               </button>
             )}
           </>
@@ -351,7 +345,7 @@ export default function Home() {
 
             {error && activeTab === 'Mentor' && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
 
-            {!conversationUrl ? (
+            {!conversationUrl && (
               <div className="mentor-status" style={{ marginTop: '16px', padding: '16px', borderRadius: '8px', background: 'rgba(0,0,0,0.03)', border: '1px dashed var(--border)' }}>
                 {isSynthesizing ? (
                   <div style={{ color: 'var(--pastel-green-text)', fontWeight: 600 }}>
@@ -376,14 +370,6 @@ export default function Home() {
                   </div>
                 )}
               </div>
-            ) : (
-              <button 
-                className="btn btn-danger" 
-                onClick={handleEndSessionManual}
-                disabled={isLoading}
-              >
-                {isLoading ? "Ending..." : "End Session"}
-              </button>
             )}
           </>
         ) : null}

@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 
 const CORE_AVATARS = [
+  { id: "r291e545fd67", name: "Gabby - Home" },
+  { id: "r4ba1277e4fb", name: "Darius - Outdoor" },
   { id: "r9d30b0e55ac", name: "Luna" },
   { id: "rf4703150052", name: "Charlie" },
   { id: "rc2146c13e81", name: "Olivia" },
@@ -17,7 +19,8 @@ const CORE_AVATARS = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"Date" | "Notes" | "Mentor">("Date");
-  const [replicaId, setReplicaId] = useState(CORE_AVATARS[0].id);
+  const [dateReplicaId, setDateReplicaId] = useState(CORE_AVATARS[0].id);
+  const [mentorReplicaId, setMentorReplicaId] = useState(CORE_AVATARS[1].id);
   
   // Date States
   const [systemPrompt, setSystemPrompt] = useState(
@@ -176,18 +179,19 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     if (label === 'Date') {
-      setInsights([]); 
+      setInsights([]);
       setMasterLog(null);
       setSynthesis(null);
     }
-    
+
+    const currentReplicaId = label === 'Date' ? dateReplicaId : mentorReplicaId;
+
     try {
       const res = await fetch("/api/tavus", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ systemPrompt: prompt, knowledgeBase: kb, replicaId }),
-      });
-      
+        body: JSON.stringify({ systemPrompt: prompt, knowledgeBase: kb, replicaId: currentReplicaId }),
+      });      
       const data = await res.json();
       
       if (!res.ok) {
@@ -251,8 +255,8 @@ export default function Home() {
               <label htmlFor="replicaSelect">Avatar</label>
               <select 
                 id="replicaSelect" 
-                value={replicaId} 
-                onChange={(e) => setReplicaId(e.target.value)}
+                value={dateReplicaId} 
+                onChange={(e) => setDateReplicaId(e.target.value)}
                 disabled={!!conversationUrl}
               >
                 {CORE_AVATARS.map((avatar) => (
@@ -307,8 +311,8 @@ export default function Home() {
               <label htmlFor="mentorAvatarSelect">Mentor Avatar</label>
               <select 
                 id="mentorAvatarSelect" 
-                value={replicaId} 
-                onChange={(e) => setReplicaId(e.target.value)}
+                value={mentorReplicaId} 
+                onChange={(e) => setMentorReplicaId(e.target.value)}
                 disabled={!!conversationUrl}
               >
                 {CORE_AVATARS.map((avatar) => (

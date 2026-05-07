@@ -23,6 +23,9 @@ export async function POST(req: Request) {
         system_prompt: `${combinedPrompt}\n\nIMPORTANT: If the user fails to respond or remains silent for more than 10 seconds, or if you decide the date is over based on your rubrics, you must verbally excuse yourself and immediately call the 'end_conversation' tool.`,
         pipeline_mode: "full",
         layers: {
+          stt: {
+            stt_engine: "tavus-parakeet"
+          },
           llm: {
             tools: [
               {

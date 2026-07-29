@@ -1,19 +1,21 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, GenerationConfig } from "@google/generative-ai";
 
-const getModel = () => {
+const getModel = (generationConfig?: GenerationConfig) => {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) {
     throw new Error("Missing GOOGLE_GENERATIVE_AI_API_KEY environment variable.");
   }
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({ 
-    model: "gemini-3.1-flash-lite-preview" 
+    model: "gemini-3.1-flash-lite-preview",
+    generationConfig
   });
 };
 
 export const geminiModel = {
-  generateContent: async (prompt: string) => {
-    const model = getModel();
+  generateContent: async (prompt: string, generationConfig?: GenerationConfig) => {
+    const model = getModel(generationConfig);
     return model.generateContent(prompt);
   }
 };
+

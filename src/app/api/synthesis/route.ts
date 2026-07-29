@@ -1,6 +1,60 @@
 import { NextResponse } from 'next/server';
 import { insightStore } from '@/lib/insightStore';
 import { geminiModel } from '@/lib/gemini';
+import { SchemaType } from '@google/generative-ai';
+
+const coachSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    audit: {
+      type: SchemaType.OBJECT,
+      properties: {
+        scores: {
+          type: SchemaType.OBJECT,
+          properties: {
+            EQ: { type: SchemaType.NUMBER },
+            IQ: { type: SchemaType.NUMBER },
+            Wealth: { type: SchemaType.NUMBER },
+            Physique: { type: SchemaType.NUMBER },
+          },
+          required: ["EQ", "IQ", "Wealth", "Physique"],
+        },
+        primary_weakness: { type: SchemaType.STRING },
+        rationale: { type: SchemaType.STRING },
+      },
+      required: ["scores", "primary_weakness", "rationale"],
+    },
+    mentor_prompt: {
+      type: SchemaType.OBJECT,
+      properties: {
+        system_instruction: { type: SchemaType.STRING },
+        highlights: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              type: { type: SchemaType.STRING },
+              reason: { type: SchemaType.STRING },
+              timestamp: { type: SchemaType.STRING },
+              turn_id: { type: SchemaType.STRING },
+            },
+            required: ["type", "reason"],
+          },
+        },
+      },
+      required: ["system_instruction", "highlights"],
+    },
+    next_partner_prompt: {
+      type: SchemaType.OBJECT,
+      properties: {
+        system_instruction: { type: SchemaType.STRING },
+        focus_area: { type: SchemaType.STRING },
+      },
+      required: ["system_instruction", "focus_area"],
+    },
+  },
+  required: ["audit", "mentor_prompt", "next_partner_prompt"],
+};
 
 export async function POST(req: Request) {
   try {
@@ -83,36 +137,13 @@ export async function POST(req: Request) {
       - Evolutionary Instruction: The partner must naturally "stress test" the specific Value Leak identified in the previous session. 
       - Implementation: If the weakness was IQ/Wealth, she should be intellectually demanding or unimpressed by surface-level material claims. If the weakness was Physique/EQ, she should call out fidgeting or lack of presence immediately in the flow of conversation. 
       - Length Constraint: Keep the prompt length similar to the original P0 prompt (~150-200 words).
-
-      ---
-
-      ### REQUIRED RETURN FORMAT (JSON)
-      Return ONLY a valid JSON object. Do not include markdown code blocks.
-      {
-        "audit": {
-          "scores": { "EQ": 0, "IQ": 0, "Wealth": 0, "Physique": 0 },
-          "primary_weakness": "string",
-          "rationale": "string"
-        },
-        "mentor_prompt": {
-          "system_instruction": "string",
-          "highlights": [
-            { "type": "strength/weakness", "reason": "string", "timestamp": "ISO", "turn_id": "string" }
-          ]
-        },
-        "next_partner_prompt": {
-          "system_instruction": "string",
-          "focus_area": "string"
-        }
-      }
     `;
 
-    const coachResult = await geminiModel.generateContent(coachPrompt);
-    const coachDataRaw = coachResult.response.text();
-    
-    // Attempt to parse JSON (cleaning potential markdown wrapper if Gemini adds it)
-    const jsonMatch = coachDataRaw.match(/\{[\s\S]*\}/);
-    const coachData = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(coachDataRaw);
+    const coachResult = await geminiModel.generateContent(coachPrompt, {
+      responseMimeType: "application/json",
+      responseSchema: coachSchema as any,
+    });
+    const coachData = JSON.parse(coachResult.response.text());
 
     // Store synthesis results
     await insightStore.setMetadata(conversationId, 'session_synthesis', coachData);

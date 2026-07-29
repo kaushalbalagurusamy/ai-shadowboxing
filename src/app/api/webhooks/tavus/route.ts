@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { insightStore } from '@/lib/insightStore';
+import { logger } from '@/lib/telemetry';
 import crypto from 'crypto';
 
 function verifyTavusSignature(rawBody: string, signatureHeader: string | null, secret: string): boolean {
@@ -29,34 +30,32 @@ export async function POST(req: Request) {
     if (webhookSecret) {
       const isValid = verifyTavusSignature(rawBody, signatureHeader, webhookSecret);
       if (!isValid) {
-        console.warn("UNAUTHORIZED TAVUS WEBHOOK REJECTED: Invalid signature");
+        logger.warn("Unauthorized Tavus webhook rejected: Invalid signature");
         return NextResponse.json({ error: "Unauthorized: Invalid webhook signature" }, { status: 401 });
       }
     } else if (process.env.NODE_ENV === 'production') {
-      console.warn("WARNING: TAVUS_WEBHOOK_SECRET environment variable is missing in production.");
+      logger.warn("TAVUS_WEBHOOK_SECRET missing in production context");
     }
 
     const payload = JSON.parse(rawBody);
-    // Use the conversationId from the top level or properties
     const conversationId = payload.conversation_id || payload.properties?.conversation_id;
     const event_type = payload.event_type;
     const properties = payload.properties || {};
 
-    console.log(`TAVUS WEBHOOK [${event_type}] RECEIVED for ${conversationId}`);
+    const reqLogger = logger.child({ conversationId, eventType: event_type });
+    reqLogger.info(`Tavus webhook payload received`);
 
     if (!conversationId) {
-      console.warn("TAVUS WEBHOOK RECEIVED WITHOUT conversation_id:", JSON.stringify(payload));
+      logger.warn("Tavus webhook received without conversationId", { payload });
       return NextResponse.json({ received: true, warning: "no conversation_id" });
     }
 
     if (event_type === "system.shutdown") {
-      // Session ended. Upload the video if available.
       let finalRecordingUrl = properties.recording_url;
       if (finalRecordingUrl) {
         finalRecordingUrl = await insightStore.uploadVideo(conversationId, finalRecordingUrl);
       }
 
-      // Store the final analysis.
       await insightStore.addInsight(conversationId, {
         type: "session_summary",
         analysis: properties.perception_analysis,
@@ -64,17 +63,15 @@ export async function POST(req: Request) {
         timestamp: new Date().toISOString()
       });
 
-      // Event-Driven Synthesis: Trigger 2-pass synthesis automatically on backend event
       try {
         const { executeSynthesis } = await import('@/app/api/synthesis/route');
         await executeSynthesis(conversationId);
-        console.log(`EVENT-DRIVEN BACKEND SYNTHESIS SUCCESSFUL for ${conversationId}`);
-      } catch (synthErr: any) {
-        console.error(`Backend Synthesis Error for ${conversationId}:`, synthErr.message);
+        reqLogger.info(`Event-driven backend synthesis completed successfully`);
+      } catch (synthErr: unknown) {
+        reqLogger.error(`Event-driven backend synthesis failed`, synthErr);
       }
     }
 
-    // Handle both individual utterances and full transcription ready events
     if (event_type === "conversation.utterance") {
       await insightStore.addInsight(conversationId, {
         type: "transcript_turn",
@@ -116,12 +113,10 @@ export async function POST(req: Request) {
       }
     }
 
-    // Agentic Termination Handler
     if (event_type === "conversation.tool_call" && properties.function_name === "end_conversation") {
       const reason = properties.arguments?.reason || "No reason provided";
-      console.log(`AGENT REQUESTED HANG UP: ${reason} for ${conversationId}`);
+      reqLogger.info(`Agent requested hangup: ${reason}`);
       
-      // 1. Log the termination as a definitive "Value Leak" behavioral cue
       await insightStore.addInsight(conversationId, {
         type: "behavioral_cue",
         category: "Final Outcome",
@@ -130,7 +125,6 @@ export async function POST(req: Request) {
         timestamp: new Date().toISOString()
       });
 
-      // 2. Actually kill the call via Tavus API
       const apiKey = process.env.TAVUS_API_KEY;
       if (apiKey) {
         await fetch(`https://tavusapi.com/v2/conversations/${conversationId}/end`, {
@@ -142,8 +136,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true });
 
-  } catch (error: any) {
-    console.error("Webhook Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    logger.error("Tavus webhook handler error", error);
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
+

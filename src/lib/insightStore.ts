@@ -1,37 +1,57 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 // Create two clients: one for the browser (respects RLS) and one for the server (bypasses RLS)
-export const supabaseClient = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
-export const supabaseAdmin = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
+export const supabaseClient: SupabaseClient | null = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+export const supabaseAdmin: SupabaseClient | null = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 // Use the appropriate client based on context
-const getSupabase = () => {
-  // If we are on the server and have a service key, use admin
+const getSupabase = (): SupabaseClient | null => {
   if (typeof window === 'undefined' && supabaseAdmin) {
     return supabaseAdmin;
   }
   return supabaseClient;
 };
 
+export interface SessionInsight {
+  type: string;
+  role?: string;
+  text?: string;
+  category?: string;
+  signalType?: string;
+  reason?: string;
+  timestamp?: string;
+  imageFrame?: string;
+  analysis?: Record<string, unknown>;
+  recordingUrl?: string | null;
+  key?: string;
+  value?: unknown;
+}
+
 class InsightStore {
-  // Upload a video clip to Supabase Storage
+  // Upload a video clip to Supabase Storage using zero-byte RAM buffer stream transfer
   async uploadVideo(conversationId: string, videoUrl: string): Promise<string | null> {
     const supabase = getSupabase();
     if (!supabase) return videoUrl;
 
     try {
       const videoRes = await fetch(videoUrl);
-      const videoArrayBuffer = await videoRes.arrayBuffer();
+      if (!videoRes.ok) {
+        console.error(`Failed to fetch source video from ${videoUrl}: HTTP ${videoRes.status}`);
+        return videoUrl;
+      }
+
+      const contentType = videoRes.headers.get('content-type') || 'video/mp4';
+      const videoBlob = await videoRes.blob();
       const fileName = `${conversationId}.mp4`;
       
       const { error: uploadError } = await supabase.storage
         .from('video-clips')
-        .upload(fileName, videoArrayBuffer, {
-          contentType: 'video/mp4',
+        .upload(fileName, videoBlob, {
+          contentType,
           upsert: true
         });
         
@@ -49,7 +69,7 @@ class InsightStore {
   }
 
   // Add a new insight to the Supabase table
-  async addInsight(conversationId: string, insight: any) {
+  async addInsight(conversationId: string, insight: SessionInsight): Promise<void> {
     const supabase = getSupabase();
     if (!supabase) {
       console.warn("Supabase client not initialized. Dropping insight:", insight);
@@ -76,7 +96,7 @@ class InsightStore {
   }
 
   // Get all insights for a specific conversation
-  async getInsights(conversationId: string) {
+  async getInsights(conversationId: string): Promise<SessionInsight[]> {
     const supabase = getSupabase();
     if (!supabase) return [];
 
@@ -92,7 +112,7 @@ class InsightStore {
         return [];
       }
 
-      return data ? data.map((row) => row.data) : [];
+      return data ? data.map((row) => row.data as SessionInsight) : [];
     } catch (err) {
       console.error('Failed to get insights:', err);
       return [];
@@ -100,16 +120,17 @@ class InsightStore {
   }
 
   // Helper method for setting metadata
-  async setMetadata(conversationId: string, key: string, value: any) {
+  async setMetadata(conversationId: string, key: string, value: unknown): Promise<void> {
     await this.addInsight(conversationId, { type: 'metadata', key, value });
   }
 
   // Get a specific metadata value
-  async getMetadata(conversationId: string, key: string) {
+  async getMetadata<T = unknown>(conversationId: string, key: string): Promise<T | null> {
     const insights = await this.getInsights(conversationId);
-    const meta = insights.find((i: any) => i.type === 'metadata' && i.key === key);
-    return meta ? meta.value : null;
+    const meta = insights.find((i) => i.type === 'metadata' && i.key === key);
+    return meta ? (meta.value as T) : null;
   }
 }
 
 export const insightStore = new InsightStore();
+

@@ -1,9 +1,42 @@
 import { NextResponse } from 'next/server';
 import { insightStore } from '@/lib/insightStore';
+import crypto from 'crypto';
+
+function verifyTavusSignature(rawBody: string, signatureHeader: string | null, secret: string): boolean {
+  if (!signatureHeader) return false;
+  try {
+    const computedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(rawBody)
+      .digest('hex');
+
+    const sigBuffer = Buffer.from(signatureHeader);
+    const compBuffer = Buffer.from(computedSignature);
+
+    if (sigBuffer.length !== compBuffer.length) return false;
+    return crypto.timingSafeEqual(sigBuffer, compBuffer);
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(req: Request) {
   try {
-    const payload = await req.json();
+    const webhookSecret = process.env.TAVUS_WEBHOOK_SECRET;
+    const rawBody = await req.text();
+    const signatureHeader = req.headers.get('x-tavus-signature') || req.headers.get('x-signature');
+
+    if (webhookSecret) {
+      const isValid = verifyTavusSignature(rawBody, signatureHeader, webhookSecret);
+      if (!isValid) {
+        console.warn("UNAUTHORIZED TAVUS WEBHOOK REJECTED: Invalid signature");
+        return NextResponse.json({ error: "Unauthorized: Invalid webhook signature" }, { status: 401 });
+      }
+    } else if (process.env.NODE_ENV === 'production') {
+      console.warn("WARNING: TAVUS_WEBHOOK_SECRET environment variable is missing in production.");
+    }
+
+    const payload = JSON.parse(rawBody);
     // Use the conversationId from the top level or properties
     const conversationId = payload.conversation_id || payload.properties?.conversation_id;
     const event_type = payload.event_type;

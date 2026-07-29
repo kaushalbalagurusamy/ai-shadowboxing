@@ -148,7 +148,7 @@ flowchart TD
   - **Task:** Implement `addInsightsMany` bulk method in `InsightStore` executing a single batched Supabase SQL `INSERT` statement for full transcripts instead of looping sequential roundtrips.
   - **Impact:** 30x latency reduction during transcription processing (1,500ms -> 50ms RTT).
 
-- [ ] **14. Targeted Indexed Metadata SQL Queries**
+- [x] **14. Targeted Indexed Metadata SQL Queries** [COMPLETED]
   - **Complexity:** Low-Medium (~30 mins)
   - **Location:** `src/lib/insightStore.ts`
   - **Task:** Replace in-memory array `.find()` scanning over all conversation insights in `getMetadata` with targeted JSON SQL query filters (`data->>'key' = eq.${key}`).
@@ -265,10 +265,12 @@ flowchart TD
 * **Branch:** `feature/phase-7-hardening`
 * **Success Metrics:**
   * **30x Latency Reduction via Bulk Insertion:** Implemented `addInsightsMany` in `InsightStore` executing a single batched SQL `INSERT` statement for full transcripts instead of 20-50 sequential roundtrips.
+  * **Payload & Memory Minimization:** Refactored `getMetadata` to execute targeted SQL queries (`.eq('type', 'metadata')`), eliminating full conversation array scans and payload transfers over the network.
   * **Clean Type Checks:** Passed `npx tsc --noEmit` with zero errors.
 
 * **Atomic Commits:**
   1. `0cd7c25` - `feat(perf): implement bulk addInsightsMany database insertion method`
+  2. `b0ab7f5` - `feat(perf): refactor getMetadata to use targeted SQL query filters`
 
 
 

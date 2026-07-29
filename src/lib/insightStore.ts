@@ -130,6 +130,39 @@ class InsightStore {
     const meta = insights.find((i) => i.type === 'metadata' && i.key === key);
     return meta ? (meta.value as T) : null;
   }
+
+  // Subscribe to real-time insights for a specific conversation using Supabase Realtime WebSocket
+  subscribeToInsights(conversationId: string, onInsight: (insight: SessionInsight) => void): () => void {
+    const supabase = supabaseClient;
+    if (!supabase || !conversationId) return () => {};
+
+    const channelName = `realtime:insights:${conversationId}`;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'insights',
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload) => {
+          if (payload.new && payload.new.data) {
+            onInsight(payload.new.data as SessionInsight);
+          }
+        }
+      )
+      .subscribe((status, err) => {
+        if (err) {
+          console.warn(`Supabase Realtime subscription warning for ${conversationId}:`, err);
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }
 }
 
 export const insightStore = new InsightStore();

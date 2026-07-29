@@ -152,11 +152,36 @@ class InsightStore {
     await this.addInsight(conversationId, { type: 'metadata', key, value });
   }
 
-  // Get a specific metadata value
+  // Get a specific metadata value via indexed SQL query filter (L11 Payload & Memory Optimization)
   async getMetadata<T = unknown>(conversationId: string, key: string): Promise<T | null> {
-    const insights = await this.getInsights(conversationId);
-    const meta = insights.find((i) => i.type === 'metadata' && i.key === key);
-    return meta ? (meta.value as T) : null;
+    const supabase = getSupabase();
+    if (!supabase) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('insights')
+        .select('data')
+        .eq('conversation_id', conversationId)
+        .eq('type', 'metadata')
+        .limit(10);
+
+      if (error) {
+        console.error('Error fetching metadata from Supabase:', error);
+        return null;
+      }
+
+      if (data && data.length > 0) {
+        const match = data.find((r) => (r.data as SessionInsight)?.key === key);
+        if (match) {
+          return ((match.data as SessionInsight).value as T) ?? null;
+        }
+      }
+
+      return null;
+    } catch (err) {
+      console.error('Failed to get metadata:', err);
+      return null;
+    }
   }
 
   // Subscribe to real-time insights for a specific conversation using Supabase Realtime WebSocket

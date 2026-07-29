@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AvatarSelector } from './AvatarSelector';
+import { SCENARIO_PRESETS } from '@/lib/scenarioPresets';
 
 interface DateTabProps {
   dateReplicaId: string;
@@ -26,8 +27,35 @@ export function DateTab({
   isLoading,
   onStartSession,
 }: DateTabProps) {
+  const [selectedPresetId, setSelectedPresetId] = useState<string>(SCENARIO_PRESETS[0].id);
+
+  const handleSelectPreset = (presetId: string) => {
+    setSelectedPresetId(presetId);
+    const preset = SCENARIO_PRESETS.find((p) => p.id === presetId);
+    if (preset) {
+      setSystemPrompt(preset.systemPrompt);
+      setKnowledgeBase(preset.knowledgeBase);
+    }
+  };
+
   return (
     <>
+      <div className="input-group">
+        <label htmlFor="presetSelect">Scenario Challenge</label>
+        <select
+          id="presetSelect"
+          value={selectedPresetId}
+          onChange={(e) => handleSelectPreset(e.target.value)}
+          disabled={!!conversationUrl}
+        >
+          {SCENARIO_PRESETS.map((preset) => (
+            <option key={preset.id} value={preset.id}>
+              {preset.name} ({preset.difficulty})
+            </option>
+          ))}
+        </select>
+      </div>
+
       <AvatarSelector
         id="replicaSelect"
         label="Avatar"

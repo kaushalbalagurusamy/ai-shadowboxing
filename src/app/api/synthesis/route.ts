@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { insightStore } from '@/lib/insightStore';
 import { geminiModel } from '@/lib/gemini';
 import { SchemaType } from '@google/generative-ai';
+import { conversationIdSchema } from '@/lib/schemas';
 
 const coachSchema = {
   type: SchemaType.OBJECT,
@@ -149,12 +150,14 @@ export async function executeSynthesis(conversationId: string) {
 
 export async function POST(req: Request) {
   try {
-    const { conversationId } = await req.json();
+    const rawBody = await req.json();
+    const parseResult = conversationIdSchema.safeParse(rawBody);
 
-    if (!conversationId) {
-      return NextResponse.json({ error: "Missing conversationId" }, { status: 400 });
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid payload", details: parseResult.error.format() }, { status: 400 });
     }
 
+    const { conversationId } = parseResult.data;
     const result = await executeSynthesis(conversationId);
     
     return NextResponse.json({ 

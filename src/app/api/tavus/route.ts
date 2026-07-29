@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { startSessionSchema } from '@/lib/schemas';
 
 // In-memory persona cache mapping SHA-256 config hash to Tavus persona_id
 const personaCache = new Map<string, string>();
@@ -76,7 +77,14 @@ async function createTavusPersona(apiKey: string, combinedPrompt: string): Promi
 
 export async function POST(req: Request) {
   try {
-    const { systemPrompt, knowledgeBase, replicaId } = await req.json();
+    const rawBody = await req.json();
+    const parseResult = startSessionSchema.safeParse(rawBody);
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid payload", details: parseResult.error.format() }, { status: 400 });
+    }
+
+    const { systemPrompt, knowledgeBase, replicaId } = parseResult.data;
     const apiKey = process.env.TAVUS_API_KEY;
 
     if (!apiKey) {

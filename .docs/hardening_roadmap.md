@@ -91,13 +91,13 @@ flowchart TD
 ### Phase 4: Production Security & Enterprise Hardening
 *Goal: Lock down API endpoints and validate schemas before production deployment.*
 
-- [ ] **7. Tavus Webhook Signature Verification**
+- [x] **7. Tavus Webhook Signature Verification** [COMPLETED]
   - **Complexity:** Low (~30 mins)
   - **Location:** `src/app/api/webhooks/tavus/route.ts`
   - **Task:** Add HMAC signature validation against `TAVUS_WEBHOOK_SECRET` (with dev bypass toggle for local offline testing).
   - **Impact:** Prevents arbitrary payload injection and unauthorized call termination.
 
-- [ ] **8. Strict Zod Schemas & Test Suite**
+- [x] **8. Strict Zod Schemas & Test Suite** [COMPLETED]
   - **Complexity:** Medium (~1-2 hours)
   - **Location:** All `src/app/api/...` routes & test runner
   - **Task:** Implement Zod request payload validation across API routes and write core integration test suites.
@@ -159,6 +159,20 @@ flowchart TD
 * **Atomic Commits:**
   1. `12b22da` - `feat(realtime): implement Supabase Realtime WebSocket subscription with resilient polling fallback`
   2. `f993e6b` - `refactor(ui): decompose monolithic page.tsx into custom hooks and modular sub-components`
+
+### Phase 4 Execution Log (Completed)
+* **Date:** July 29, 2026
+* **Branch:** `feature/phase-4-hardening`
+* **Success Metrics:**
+  * **HMAC Signature Security:** Webhook endpoint (`/api/webhooks/tavus`) validates signatures against `TAVUS_WEBHOOK_SECRET` using timing-safe comparison (`crypto.timingSafeEqual`), returning HTTP 401 Unauthorized for invalid or spoofed requests.
+  * **Strict Boundary Schema Contracts:** Added Zod validation schemas (`startSessionSchema`, `conversationIdSchema`) across API routes (`POST /api/tavus`, `POST /api/tavus/end`, `POST /api/synthesis`), returning HTTP 400 with detailed schema issues on invalid inputs.
+  * **Integration Test Suite:** Added `src/lib/schemas.test.ts` verifying boundary validation behavior.
+  * **Clean Type Checks:** Passed `npx tsc --noEmit` with zero errors.
+
+* **Atomic Commits:**
+  1. `b2f0624` - `feat(security): implement Tavus webhook HMAC SHA-256 signature verification`
+  2. `664843b` - `feat(validation): implement strict Zod request schema validation & integration tests`
+
 
 
 

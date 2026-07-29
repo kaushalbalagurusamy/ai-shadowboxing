@@ -122,6 +122,23 @@ flowchart TD
 
 ---
 
+### Phase 6: Multi-Session Progress Tracking & Scenario Presets
+*Goal: Provide historical rubric performance analytics and dynamic scenario difficulty presets.*
+
+- [x] **11. Multi-Session Progress Analytics Store & API** [COMPLETED]
+  - **Complexity:** Medium (~1 hour)
+  - **Location:** `src/lib/progressStore.ts` & `src/app/api/progress/route.ts`
+  - **Task:** Aggregate user session scores over time for EQ, IQ, Wealth, Physique and expose `/api/progress` API endpoint with Zod validation.
+  - **Impact:** Enables historical progress tracking across multiple sparring sessions.
+
+- [x] **12. Dynamic Scenario Preset Library & Difficulty Tiering** [COMPLETED]
+  - **Complexity:** Low-Medium (~45 mins)
+  - **Location:** `src/lib/scenarioPresets.ts` & `src/components/DateTab.tsx`
+  - **Task:** Create preset scenario library (Coffee Shop Baseline, Standoffish Lawyer, High-Stakes Rooftop) with selectable difficulty tiers (Standard, Challenging, Standoffish Apex).
+  - **Impact:** Enhances gamification loop with structured date scenarios and difficulty scaling.
+
+---
+
 ## Phase Matrix Summary
 
 | Phase | Task | Complexity | Dev DX Impact | Production Scale Readiness |
@@ -201,6 +218,19 @@ flowchart TD
 * **Atomic Commits:**
   1. `7226d3b` - `feat(telemetry): implement correlation-tracked structured JSON logger`
   2. `be0fe39` - `test(api): create integration test suite for boundary schemas and HMAC verification`
+
+### Phase 6 Execution Log (Completed)
+* **Date:** July 29, 2026
+* **Branch:** `feature/phase-6-hardening`
+* **Success Metrics:**
+  * **Historical Progress Analytics Store:** Created `ProgressStore` in `src/lib/progressStore.ts` and exposed `/api/progress` with Zod query validation calculating historical average pillar scores and weakness trends.
+  * **Dynamic Scenario Presets & Difficulty Scaling:** Implemented scenario preset library in `src/lib/scenarioPresets.ts` with 3 difficulty tiers (Standard, Challenging, Standoffish Apex) and interactive scenario selection in `DateTab`.
+  * **Clean Type Checks:** Passed `npx tsc --noEmit` with zero errors.
+
+* **Atomic Commits:**
+  1. `bee1e41` - `feat(progress): implement multi-session progress analytics store & API endpoint`
+  2. `083a87d` - `feat(presets): create dynamic scenario preset library and difficulty selector`
+
 
 
 

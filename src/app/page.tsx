@@ -1,27 +1,34 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-
-const CORE_AVATARS = [
-  { id: "r291e545fd67", name: "Gabby - Home" },
-  { id: "r4ba1277e4fb", name: "Darius - Outdoor" },
-  { id: "r9d30b0e55ac", name: "Luna" },
-  { id: "rf4703150052", name: "Charlie" },
-  { id: "rc2146c13e81", name: "Olivia" },
-  { id: "r4317e64d25a", name: "Gloria" },
-  { id: "r6ae5b6efc9d", name: "Anna" },
-  { id: "r9c55f9312fb", name: "Steph - Office V1" },
-  { id: "r1a4e22fa0d9", name: "Benjamin" },
-  { id: "r68fe8906e53", name: "Mary - Office" },
-  { id: "r67d1c9cac37", name: "Jackie - Office V2" },
-  { id: "ra066ab28864", name: "Raj" }
-];
+import { CORE_AVATARS } from "@/components/AvatarSelector";
+import { DateTab } from "@/components/DateTab";
+import { MentorTab } from "@/components/MentorTab";
+import { NotesTab } from "@/components/NotesTab";
+import { MediaStreamContainer } from "@/components/MediaStreamContainer";
+import { useTavusSession } from "@/hooks/useTavusSession";
+import { useSessionInsights } from "@/hooks/useSessionInsights";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"Date" | "Notes" | "Mentor">("Date");
-  const [dateReplicaId, setDateReplicaId] = useState(CORE_AVATARS[0].id);
-  const [mentorReplicaId, setMentorReplicaId] = useState(CORE_AVATARS[1].id);
-  
+  const {
+    activeTab,
+    setActiveTab,
+    conversationUrl,
+    conversationId,
+    isLoading,
+    isSynthesizing,
+    setIsSynthesizing,
+    error,
+    startSession,
+    setConversationId,
+    setConversationUrl,
+  } = useTavusSession();
+
+  const { insights, masterLog, synthesis } = useSessionInsights(conversationId);
+
+  const [dateReplicaId, setDateReplicaId] = useState<string>(CORE_AVATARS[0].id);
+  const [mentorReplicaId, setMentorReplicaId] = useState<string>(CORE_AVATARS[1].id);
+
   // Date States
   const [systemPrompt, setSystemPrompt] = useState(
     "You are an attractive mid 20s woman from NYC on a first date at a coffee shop. You have a plethora of options and are initially very low interest in your date. You are a high value lawyer and are initially standoffish. Utilize your knowledge base to increase interest if and only if your date exhibits high value themselves and high charisma as defined by the knowledge base."
@@ -33,188 +40,39 @@ export default function Home() {
   // Mentor States
   const [mentorPrompt, setMentorPrompt] = useState("Select a date session to generate mentor feedback.");
   const [mentorKnowledgeBase, setMentorKnowledgeBase] = useState("High-Value Rubrics: EQ, IQ, Wealth, Physique.");
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [conversationUrl, setConversationUrl] = useState<string | null>(null);
-  const [conversationId, setConversationId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [insights, setInsights] = useState<any[]>([]);
-  const [masterLog, setMasterLog] = useState<string | null>(null);
-  const [synthesis, setSynthesis] = useState<any | null>(null);
-  const [isSynthesizing, setIsSynthesizing] = useState(false);
 
   // Refs for scroll sync
   const transcriptRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Ref to store conversationId for cleanup
-  const conversationIdRef = useRef<string | null>(null);
-
-  // Listen for messages from the Tavus iframe (Interactions Protocol)
+  // Auto-update mentor prompt when synthesis lands
   useEffect(() => {
-    const handleTavusMessage = (event: MessageEvent) => {
-      // Tavus emits events via postMessage when tools are called or state changes
-      if (
-        (event.data?.event_type === 'conversation.tool_call' && event.data?.name === 'end_conversation') ||
-        (event.data?.event_type === 'conversation.participant_left')
-      ) {
-        console.log(`Session end event detected: ${event.data?.event_type}. Ending session...`);
-        terminateSession();
-      }
-    };
-
-    window.addEventListener('message', handleTavusMessage);
-    return () => window.removeEventListener('message', handleTavusMessage);
-  }, [conversationId]);
-
-  useEffect(() => {
-    conversationIdRef.current = conversationId;
-    
-    // Start polling for insights when conversation starts
-    let interval: NodeJS.Timeout;
-    if (conversationId) {
-      interval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/tavus/insights?conversationId=${conversationId}`);
-          const data = await res.json();
-          if (data.insights) {
-            setInsights(data.insights);
-            
-            // Sync metadata
-            const log = data.insights.find((i: any) => i.type === 'metadata' && i.key === 'master_performance_log');
-            if (log) setMasterLog(log.value);
-
-            const synth = data.insights.find((i: any) => i.type === 'metadata' && i.key === 'session_synthesis');
-            if (synth) {
-              setSynthesis(synth.value);
-              // Auto-populate mentor tab with results
-              setMentorPrompt(synth.value.mentor_prompt.system_instruction);
-              // Also potentially update the next date partner prompt if user switches back to date tab
-            }
-          }
-        } catch (err) {
-          console.error("Polling error:", err);
-        }
-      }, 3000); 
+    if (synthesis) {
+      setMentorPrompt(synthesis.mentor_prompt.system_instruction);
+      setIsSynthesizing(false);
     }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [conversationId]);
+  }, [synthesis, setIsSynthesizing]);
 
-  // Auto-scroll to bottom of boxes
+  // Auto-scroll to bottom of log boxes
   useEffect(() => {
     if (transcriptRef.current) transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
     if (toolsRef.current) toolsRef.current.scrollTop = toolsRef.current.scrollHeight;
   }, [insights]);
 
-  const runSynthesis = async (id: string) => {
-    setIsSynthesizing(true);
-    try {
-      const res = await fetch("/api/synthesis", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: id }),
-      });
-      const data = await res.json();
-      if (data.masterPerformanceLog) setMasterLog(data.masterPerformanceLog);
-      if (data.synthesis) {
-        setSynthesis(data.synthesis);
-        setMentorPrompt(data.synthesis.mentor_prompt.system_instruction);
-      }
-    } catch (err) {
-      console.error("Synthesis failed:", err);
-    } finally {
-      setIsSynthesizing(false);
-    }
-  };
-
-  const endSession = async (idToEnd: string) => {
-    try {
-      await fetch("/api/tavus/end", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: idToEnd }),
-      });
-    } catch (err) {
-      console.error("Failed to end session on cleanup:", err);
-    }
-  };
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (conversationIdRef.current) {
-        const blob = new Blob(
-          [JSON.stringify({ conversationId: conversationIdRef.current })],
-          { type: "application/json" }
-        );
-        navigator.sendBeacon("/api/tavus/end", blob);
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      if (conversationIdRef.current) {
-        endSession(conversationIdRef.current);
-      }
-    };
-  }, []);
-
-  const terminateSession = async () => {
-   if (!conversationId) return;
-   setIsLoading(true);
-   await endSession(conversationId);
-   setConversationUrl(null);
-   setIsLoading(false);
-   setActiveTab("Notes");
-  };
-  const startSession = async (prompt: string, kb: string, label: string) => {
-    setIsLoading(true);
-    setError(null);
+  const handleStartSession = (prompt: string, kb: string, label: string) => {
     if (label === 'Date') {
-      setInsights([]);
-      setMasterLog(null);
-      setSynthesis(null);
+      setConversationId(null);
+      setConversationUrl(null);
     }
-
     const currentReplicaId = label === 'Date' ? dateReplicaId : mentorReplicaId;
-
-    try {
-      const res = await fetch("/api/tavus", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ systemPrompt: prompt, knowledgeBase: kb, replicaId: currentReplicaId }),
-      });      
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || `Failed to start ${label.toLowerCase()}`);
-      }
-      
-      setConversationUrl(data.url);
-      setConversationId(data.conversationId);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
+    startSession(prompt, kb, label, currentReplicaId);
   };
 
-  const sessionSummary = insights.find(i => i.type === 'session_summary');
-  const behavioralCues = insights.filter(i => i.type === 'behavioral_cue');
-  const transcriptTurns = insights.filter(i => i.type === 'transcript_turn');
-
-  const firstInsight = transcriptTurns.length > 0 ? transcriptTurns[0] : (behavioralCues.length > 0 ? behavioralCues[0] : null);
-  const startTime = firstInsight ? new Date(firstInsight.timestamp).getTime() : null;
-
-  const handleCueClick = (timestamp: string) => {
-    if (!startTime || !videoRef.current) return;
-    const offsetSeconds = Math.max(0, (new Date(timestamp).getTime() - startTime) / 1000);
-    videoRef.current.currentTime = offsetSeconds;
-    videoRef.current.play().catch(e => console.error("Playback failed:", e));
+  const handleApplyNextPartnerPrompt = (nextPrompt: string) => {
+    setSystemPrompt(nextPrompt);
+    setActiveTab('Date');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -244,278 +102,54 @@ export default function Home() {
             Notes
           </div>
         </div>
-        
+
         {activeTab === 'Date' && (
-          <>
-            <div className="input-group">
-              <label htmlFor="replicaSelect">Avatar</label>
-              <select 
-                id="replicaSelect" 
-                value={dateReplicaId} 
-                onChange={(e) => setDateReplicaId(e.target.value)}
-                disabled={!!conversationUrl}
-              >
-                {CORE_AVATARS.map((avatar) => (
-                  <option key={avatar.id} value={avatar.id}>
-                    {avatar.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="input-group">
-              <label htmlFor="personaPrompt">Prompt</label>
-              <textarea
-                id="personaPrompt"
-                value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
-                placeholder="Define the avatar's personality..."
-                rows={6}
-                disabled={!!conversationUrl}
-              />
-            </div>
-
-            <div className="input-group">
-              <label htmlFor="knowledgeBase">Knowledge</label>
-              <textarea
-                id="knowledgeBase"
-                value={knowledgeBase}
-                onChange={(e) => setKnowledgeBase(e.target.value)}
-                placeholder="Define the grading rubrics..."
-                rows={6}
-                disabled={!!conversationUrl}
-              />
-            </div>
-
-            {error && activeTab === 'Date' && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
-
-            {!conversationUrl && (
-              <button 
-                className="btn btn-primary" 
-                onClick={() => startSession(systemPrompt, knowledgeBase, 'Date')} 
-                disabled={isLoading}
-              >
-                {isLoading ? "Provisioning..." : "Date"}
-              </button>
-            )}
-          </>
+          <DateTab
+            dateReplicaId={dateReplicaId}
+            setDateReplicaId={setDateReplicaId}
+            systemPrompt={systemPrompt}
+            setSystemPrompt={setSystemPrompt}
+            knowledgeBase={knowledgeBase}
+            setKnowledgeBase={setKnowledgeBase}
+            conversationUrl={conversationUrl}
+            error={error}
+            isLoading={isLoading}
+            onStartSession={handleStartSession}
+          />
         )}
 
-        {activeTab === 'Mentor' ? (
-          <>
-            <div className="input-group">
-              <label htmlFor="mentorAvatarSelect">Mentor Avatar</label>
-              <select 
-                id="mentorAvatarSelect" 
-                value={mentorReplicaId} 
-                onChange={(e) => setMentorReplicaId(e.target.value)}
-                disabled={!!conversationUrl}
-              >
-                {CORE_AVATARS.map((avatar) => (
-                  <option key={avatar.id} value={avatar.id}>
-                    {avatar.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="input-group">
-              <label htmlFor="mentorPrompt">Mentor Prompt</label>
-              <textarea
-                id="mentorPrompt"
-                value={mentorPrompt}
-                onChange={(e) => setMentorPrompt(e.target.value)}
-                placeholder="The synthesized mentor instructions will appear here..."
-                rows={10}
-                disabled={!!conversationUrl}
-              />
-            </div>
-
-            <div className="input-group">
-              <label htmlFor="mentorKnowledge">Mentor Knowledge</label>
-              <textarea
-                id="mentorKnowledge"
-                value={mentorKnowledgeBase}
-                onChange={(e) => setMentorKnowledgeBase(e.target.value)}
-                placeholder="Define the mentor's evaluation logic..."
-                rows={4}
-                disabled={!!conversationUrl}
-              />
-            </div>
-
-            {error && activeTab === 'Mentor' && <div style={{ color: "var(--danger)", marginBottom: "16px", fontSize: "0.9rem", fontWeight: 500 }}>Error: {error}</div>}
-
-            {!conversationUrl && (
-              <div className="mentor-status" style={{ marginTop: '16px', padding: '16px', borderRadius: '8px', background: 'rgba(0,0,0,0.03)', border: '1px dashed var(--border)' }}>
-                {isSynthesizing ? (
-                  <div style={{ color: 'var(--pastel-green-text)', fontWeight: 600 }}>
-                    <span className="pulse">●</span> Synthesis in progress...
-                  </div>
-                ) : synthesis ? (
-                  <div>
-                    <div style={{ color: 'var(--pastel-green-text)', fontWeight: 600, marginBottom: '8px' }}>
-                      ✓ Knowledge Loaded
-                    </div>
-                    <button 
-                      className="btn btn-primary" 
-                      onClick={() => startSession(mentorPrompt, mentorKnowledgeBase, 'Mentor')} 
-                      style={{ background: 'var(--pastel-green)', color: 'var(--pastel-green-text)', borderColor: 'transparent', width: '100%' }}
-                    >
-                      {isLoading ? "Provisioning..." : "Chat with Mentor"}
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-                    The Mentor is watching. Finish your Date to trigger synthesis.
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        ) : null}
+        {activeTab === 'Mentor' && (
+          <MentorTab
+            mentorReplicaId={mentorReplicaId}
+            setMentorReplicaId={setMentorReplicaId}
+            mentorPrompt={mentorPrompt}
+            setMentorPrompt={setMentorPrompt}
+            mentorKnowledgeBase={mentorKnowledgeBase}
+            setMentorKnowledgeBase={setMentorKnowledgeBase}
+            conversationUrl={conversationUrl}
+            error={error}
+            isLoading={isLoading}
+            isSynthesizing={isSynthesizing}
+            synthesis={synthesis}
+            onStartSession={handleStartSession}
+          />
+        )}
 
         {activeTab === 'Notes' && (
-          <div className="notes-container" style={{ paddingBottom: '32px' }}>
-            
-            {sessionSummary?.recordingUrl && (
-              <div className="notes-section">
-                <div className="notes-section-title">Session Recording</div>
-                <video 
-                  ref={videoRef} 
-                  src={sessionSummary.recordingUrl} 
-                  controls 
-                  style={{ width: '100%', borderRadius: '8px', marginBottom: '8px', background: '#000' }}
-                />
-                <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>Click on any Tool Call below to jump to that moment in the video.</div>
-              </div>
-            )}
-
-            <div className="notes-section">
-              <div className="notes-section-title">Transcript</div>
-              <div className="scroll-box" ref={transcriptRef}>
-                {transcriptTurns.length > 0 ? transcriptTurns.map((turn, idx) => (
-                  <div key={idx} className={`note-item note-item-${turn.role}`}>
-                    <div className="note-label">{turn.role === 'assistant' ? 'Partner' : 'You'}</div>
-                    {turn.text}
-                  </div>
-                )) : (
-                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Awaiting dialogue...</div>
-                )}
-              </div>
-            </div>
-
-            <div className="notes-section">
-              <div className="notes-section-title">Tool Calls</div>
-              <div className="scroll-box" ref={toolsRef}>
-                {behavioralCues.length > 0 ? behavioralCues.map((cue, idx) => (
-                  <div 
-                    key={idx} 
-                    className="note-item note-item-signal" 
-                    style={{ cursor: sessionSummary?.recordingUrl ? 'pointer' : 'default' }}
-                    onClick={() => handleCueClick(cue.timestamp)}
-                  >
-                    <div className="badge-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <div className={`badge ${cue.signalType === 'negative' ? 'badge-red' : 'badge-green'}`}>
-                        {cue.category}: {cue.signalType}
-                      </div>
-                      <div className="insight-timestamp" style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        {sessionSummary?.recordingUrl && <span>▶</span>}
-                        {new Date(cue.timestamp).toLocaleTimeString()}
-                      </div>
-                    </div>
-                    <div style={{ fontWeight: 600 }}>{cue.reason}</div>
-                  </div>
-                )) : (
-                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Raven is watching for cues...</div>
-                )}
-              </div>
-            </div>
-
-            <div className="notes-section">
-              <div className="notes-section-title">Final Analysis</div>
-              <div className="scroll-box" style={{ maxHeight: '150px' }}>
-                {sessionSummary && sessionSummary.analysis ? Object.entries(sessionSummary.analysis).map(([key, value]: [string, any], idx) => (
-                  <div key={idx} className="note-item" style={{ background: '#ffffff', borderColor: 'var(--border)' }}>
-                    <div className="badge badge-blue">{key.split(':')[0]}</div>
-                    <div style={{ lineHeight: '1.4' }}>{typeof value === 'string' ? value : value.answer}</div>
-                    {value.turn_id && <div className="insight-timestamp">Turn ID: {value.turn_id}</div>}
-                  </div>
-                )) : (
-                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Summary available after session end.</div>
-                )}
-              </div>
-            </div>
-
-            <div className="notes-section">
-              <div className="notes-section-title">Mentor Transmission</div>
-              <div className="scroll-box" style={{ maxHeight: 'none', background: '#f8f8fa' }}>
-                {isSynthesizing ? (
-                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Coach is synthesizing performance...</div>
-                ) : synthesis ? (
-                  <div className="notes-container" style={{ gap: '12px' }}>
-                    <div className="insight-card" style={{ background: '#ffffff', border: 'none' }}>
-                      <div className="badge-row" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                        {Object.entries(synthesis.audit.scores).map(([k, v]: [string, any]) => (
-                          <div key={k} className="badge badge-blue" style={{ marginBottom: 0 }}>{k}: {v}/10</div>
-                        ))}
-                      </div>
-                      <div className="note-label" style={{ color: 'var(--danger)' }}>Primary Weakness</div>
-                      <div style={{ fontWeight: 600, marginBottom: '8px' }}>{synthesis.audit.primary_weakness}</div>
-                      <div style={{ fontSize: '0.8rem', lineHeight: '1.4', opacity: 0.8 }}>{synthesis.audit.rationale}</div>
-                    </div>
-                    
-                    <div className="note-item" style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', background: '#ffffff', borderColor: 'var(--border)' }}>
-                      <div className="note-label">Mentor Prompt (M1)</div>
-                      {synthesis.mentor_prompt.system_instruction}
-                    </div>
-
-                    <div className="note-item" style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', background: '#ffffff', borderColor: 'var(--border)' }}>
-                      <div className="note-label">Next Partner Prompt (P1)</div>
-                      {synthesis.next_partner_prompt.system_instruction}
-                      <button 
-                        className="btn btn-primary" 
-                        style={{ marginTop: '12px', fontSize: '0.75rem', padding: '6px 12px', width: 'auto' }}
-                        onClick={() => {
-                          setSystemPrompt(synthesis.next_partner_prompt.system_instruction);
-                          setActiveTab('Date');
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                      >
-                        Apply P1 to Next Date
-                      </button>
-                    </div>
-
-                    <details style={{ marginTop: '8px' }}>
-                      <summary style={{ fontSize: '0.7rem', cursor: 'pointer', opacity: 0.5, fontWeight: 600, textTransform: 'uppercase' }}>View Zipped Log</summary>
-                      <div className="note-item" style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.75rem', background: 'transparent', border: 'none', marginTop: '8px' }}>
-                        {masterLog}
-                      </div>
-                    </details>
-                  </div>
-                ) : (
-                  <div className="placeholder" style={{ fontSize: '0.8rem' }}>Transmission will arrive after session analysis.</div>
-                )}
-              </div>
-            </div>
-
-          </div>
-        )}
-      </div>
-
-      <div className="main-content">
-        {conversationUrl ? (
-          <iframe 
-            src={conversationUrl} 
-            allow="camera; microphone; fullscreen; display-capture" 
-            className="video-frame"
+          <NotesTab
+            insights={insights}
+            masterLog={masterLog}
+            synthesis={synthesis}
+            isSynthesizing={isSynthesizing}
+            transcriptRef={transcriptRef}
+            toolsRef={toolsRef}
+            videoRef={videoRef}
+            onApplyNextPartnerPrompt={handleApplyNextPartnerPrompt}
           />
-        ) : (
-          <div className="placeholder">
-            <p>Configure persona and knowledge base, then click <b>Date</b>.</p>
-            <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>Waiting for WebRTC stream...</p>
-          </div>
         )}
       </div>
+
+      <MediaStreamContainer conversationUrl={conversationUrl} />
     </div>
   );
 }

@@ -95,6 +95,34 @@ class InsightStore {
     }
   }
 
+  // Add multiple insights to Supabase in a single bulk INSERT operation (L11 Bulk API Principle)
+  async addInsightsMany(conversationId: string, insights: SessionInsight[]): Promise<void> {
+    if (insights.length === 0) return;
+    const supabase = getSupabase();
+    if (!supabase) {
+      console.warn(`Supabase client not initialized. Dropping ${insights.length} insights.`);
+      return;
+    }
+
+    try {
+      const rows = insights.map((insight) => ({
+        conversation_id: conversationId,
+        type: insight.type || 'unknown',
+        data: insight,
+      }));
+
+      const { error } = await supabase
+        .from('insights')
+        .insert(rows);
+
+      if (error) {
+        console.error('Error bulk inserting insights into Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Failed to bulk add insights:', err);
+    }
+  }
+
   // Get all insights for a specific conversation
   async getInsights(conversationId: string): Promise<SessionInsight[]> {
     const supabase = getSupabase();

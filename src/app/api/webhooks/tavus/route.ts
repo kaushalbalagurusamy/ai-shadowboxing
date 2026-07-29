@@ -81,14 +81,13 @@ export async function POST(req: Request) {
       });
     } else if (event_type === "application.transcription_ready") {
       const transcript = properties.transcript || [];
-      for (const turn of transcript) {
-        await insightStore.addInsight(conversationId, {
-          type: "transcript_turn",
-          role: turn.role === 'replica' ? 'assistant' : turn.role,
-          text: turn.text,
-          timestamp: turn.timestamp || new Date().toISOString()
-        });
-      }
+      const turnsToInsert = transcript.map((turn: { role?: string; text?: string; timestamp?: string }) => ({
+        type: "transcript_turn",
+        role: turn.role === 'replica' ? 'assistant' : turn.role,
+        text: turn.text,
+        timestamp: turn.timestamp || new Date().toISOString()
+      }));
+      await insightStore.addInsightsMany(conversationId, turnsToInsert);
     }
 
     if (event_type === "conversation.perception_tool_call") {

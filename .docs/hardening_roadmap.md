@@ -105,6 +105,23 @@ flowchart TD
 
 ---
 
+### Phase 5: Operational Excellence, Observability & E2E Verification
+*Goal: Establish correlation-tracked structured telemetry logging and expanded automated test verification.*
+
+- [x] **9. Structured Telemetry & Correlation ID Logger** [COMPLETED]
+  - **Complexity:** Low-Medium (~45 mins)
+  - **Location:** `src/lib/telemetry.ts` & API routes
+  - **Task:** Replace raw `console.log`/`console.error` calls with a structured logger (`logger.info`, `logger.error`, `logger.warn`) attaching correlation `traceId`, `conversationId`, and timestamp metadata.
+  - **Impact:** Provides production-grade operational observability and fast diagnostic tracing.
+
+- [x] **10. Comprehensive API Route & Boundary Test Suite** [COMPLETED]
+  - **Complexity:** Medium (~1 hour)
+  - **Location:** `src/lib/__tests__/api.test.ts`
+  - **Task:** Create integration test suite testing API schema boundaries, webhook signature verification edge cases, and persona cache eviction.
+  - **Impact:** Prevents regressions across future feature additions.
+
+---
+
 ## Phase Matrix Summary
 
 | Phase | Task | Complexity | Dev DX Impact | Production Scale Readiness |
@@ -172,6 +189,19 @@ flowchart TD
 * **Atomic Commits:**
   1. `b2f0624` - `feat(security): implement Tavus webhook HMAC SHA-256 signature verification`
   2. `664843b` - `feat(validation): implement strict Zod request schema validation & integration tests`
+
+### Phase 5 Execution Log (Completed)
+* **Date:** July 29, 2026
+* **Branch:** `feature/phase-5-hardening`
+* **Success Metrics:**
+  * **Structured JSON Telemetry:** Created correlation-tracked logger in `src/lib/telemetry.ts` outputting formatted JSON logs with `conversationId`, `eventType`, and timestamp metadata.
+  * **Integration Test Suite Verification:** Added `src/lib/__tests__/api.test.ts` asserting schema boundary validation, HMAC timing-safe equality matching, and telemetry formatting.
+  * **Clean Type Checks:** Passed `npx tsc --noEmit` with zero errors.
+
+* **Atomic Commits:**
+  1. `7226d3b` - `feat(telemetry): implement correlation-tracked structured JSON logger`
+  2. `be0fe39` - `test(api): create integration test suite for boundary schemas and HMAC verification`
+
 
 
 

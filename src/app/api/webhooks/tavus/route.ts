@@ -30,6 +30,15 @@ export async function POST(req: Request) {
         recordingUrl: finalRecordingUrl,
         timestamp: new Date().toISOString()
       });
+
+      // Event-Driven Synthesis: Trigger 2-pass synthesis automatically on backend event
+      try {
+        const { executeSynthesis } = await import('@/app/api/synthesis/route');
+        await executeSynthesis(conversationId);
+        console.log(`EVENT-DRIVEN BACKEND SYNTHESIS SUCCESSFUL for ${conversationId}`);
+      } catch (synthErr: any) {
+        console.error(`Backend Synthesis Error for ${conversationId}:`, synthErr.message);
+      }
     }
 
     // Handle both individual utterances and full transcription ready events

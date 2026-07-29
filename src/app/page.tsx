@@ -170,10 +170,6 @@ export default function Home() {
    setConversationUrl(null);
    setIsLoading(false);
    setActiveTab("Notes");
-
-   // Proactive Synthesis: Trigger Gemini analysis automatically after a 3s buffer
-   // to ensure final webhooks (transcript/insights) have landed in our store.
-   setTimeout(() => runSynthesis(conversationId), 3000);
   };
   const startSession = async (prompt: string, kb: string, label: string) => {
     setIsLoading(true);

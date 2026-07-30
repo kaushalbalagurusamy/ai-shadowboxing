@@ -3,6 +3,11 @@ import { insightStore } from '@/lib/insightStore';
 import { logger } from '@/lib/telemetry';
 import crypto from 'crypto';
 
+// Pre-allocated static response instances to minimize heap allocation churn (L11 Principle)
+const RESP_SUCCESS = NextResponse.json({ received: true });
+const RESP_UNAUTHORIZED = NextResponse.json({ error: "Unauthorized: Invalid webhook signature" }, { status: 401 });
+const RESP_MISSING_CONVERSATION = NextResponse.json({ received: true, warning: "no conversation_id" });
+
 function verifyTavusSignature(rawBody: string, signatureHeader: string | null, secret: string): boolean {
   if (!signatureHeader) return false;
   try {
@@ -31,7 +36,7 @@ export async function POST(req: Request) {
       const isValid = verifyTavusSignature(rawBody, signatureHeader, webhookSecret);
       if (!isValid) {
         logger.warn("Unauthorized Tavus webhook rejected: Invalid signature");
-        return NextResponse.json({ error: "Unauthorized: Invalid webhook signature" }, { status: 401 });
+        return RESP_UNAUTHORIZED;
       }
     } else if (process.env.NODE_ENV === 'production') {
       logger.warn("TAVUS_WEBHOOK_SECRET missing in production context");
@@ -47,7 +52,7 @@ export async function POST(req: Request) {
 
     if (!conversationId) {
       logger.warn("Tavus webhook received without conversationId", { payload });
-      return NextResponse.json({ received: true, warning: "no conversation_id" });
+      return RESP_MISSING_CONVERSATION;
     }
 
     if (event_type === "system.shutdown") {
@@ -133,7 +138,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ received: true });
+    return RESP_SUCCESS;
 
   } catch (error: unknown) {
     logger.error("Tavus webhook handler error", error);

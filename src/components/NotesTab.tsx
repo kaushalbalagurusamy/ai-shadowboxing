@@ -1,6 +1,7 @@
 import React, { RefObject } from 'react';
 import { SessionInsight } from '@/lib/insightStore';
 import { SessionSynthesis } from '@/hooks/useSessionInsights';
+import { MentorChatContainer } from './MentorChatContainer';
 
 interface NotesTabProps {
   insights: SessionInsight[];
@@ -11,6 +12,7 @@ interface NotesTabProps {
   toolsRef: RefObject<HTMLDivElement | null>;
   videoRef: RefObject<HTMLVideoElement | null>;
   onApplyNextPartnerPrompt: (prompt: string) => void;
+  conversationId?: string | null;
 }
 
 export function NotesTab({
@@ -22,6 +24,7 @@ export function NotesTab({
   toolsRef,
   videoRef,
   onApplyNextPartnerPrompt,
+  conversationId,
 }: NotesTabProps) {
   const sessionSummary = insights.find(i => i.type === 'session_summary');
   const behavioralCues = insights.filter(i => i.type === 'behavioral_cue');
@@ -159,6 +162,10 @@ export function NotesTab({
           )}
         </div>
       </div>
+
+      {conversationId && (
+        <MentorChatContainer conversationId={conversationId} />
+      )}
 
     </div>
   );

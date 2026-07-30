@@ -13,3 +13,14 @@ export const conversationIdSchema = z.object({
 });
 
 export type ConversationIdInput = z.infer<typeof conversationIdSchema>;
+
+export const mentorChatSchema = z.object({
+  conversationId: z.string().min(1, "conversationId must not be empty"),
+  userMessage: z.string().min(1, "userMessage must not be empty"),
+  history: z.array(z.object({
+    role: z.string(),
+    content: z.string(),
+  })).optional(),
+});
+
+export type MentorChatInput = z.infer<typeof mentorChatSchema>;

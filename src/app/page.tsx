@@ -145,6 +145,7 @@ export default function Home() {
             toolsRef={toolsRef}
             videoRef={videoRef}
             onApplyNextPartnerPrompt={handleApplyNextPartnerPrompt}
+            conversationId={conversationId}
           />
         )}
       </div>

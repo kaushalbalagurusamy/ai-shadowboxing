@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { startSessionSchema } from '@/lib/schemas';
+import { personaStore } from '@/lib/personaStore';
 
 // In-memory persona cache mapping SHA-256 config hash to Tavus persona_id
 const personaCache = new Map<string, string>();
@@ -94,11 +95,19 @@ export async function POST(req: Request) {
     const combinedPrompt = `${systemPrompt}\n\nKNOWLEDGE BASE (RUBRICS):\n${knowledgeBase}`;
     const configHash = crypto.createHash('sha256').update(combinedPrompt).digest('hex');
 
-    // Check in-memory cache for existing Persona ID
+    // Multi-level Persona Caching (L1 In-Memory + L2 Distributed Store)
     let personaId = personaCache.get(configHash);
+    if (!personaId) {
+      personaId = (await personaStore.getCachedPersonaId(configHash)) || undefined;
+      if (personaId) {
+        personaCache.set(configHash, personaId);
+      }
+    }
+
     if (!personaId) {
       personaId = await createTavusPersona(apiKey, combinedPrompt);
       personaCache.set(configHash, personaId);
+      await personaStore.setCachedPersonaId(configHash, personaId);
     }
 
     // Attempt conversation creation with personaId

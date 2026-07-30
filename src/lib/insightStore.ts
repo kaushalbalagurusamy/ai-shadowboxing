@@ -9,7 +9,7 @@ export const supabaseClient: SupabaseClient | null = supabaseUrl && supabaseAnon
 export const supabaseAdmin: SupabaseClient | null = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 // Use the appropriate client based on context
-const getSupabase = (): SupabaseClient | null => {
+export const getSupabase = (): SupabaseClient | null => {
   if (typeof window === 'undefined' && supabaseAdmin) {
     return supabaseAdmin;
   }
@@ -29,6 +29,8 @@ export interface SessionInsight {
   recordingUrl?: string | null;
   key?: string;
   value?: unknown;
+  configHash?: string;
+  personaId?: string;
 }
 
 class InsightStore {

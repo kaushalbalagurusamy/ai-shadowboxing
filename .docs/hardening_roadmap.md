@@ -160,7 +160,7 @@ flowchart TD
   - **Task:** Persist SHA-256 persona configuration hashes in Supabase table so persona cache hits are shared globally across distributed serverless instances.
   - **Impact:** Guarantees sub-second session startup (~1s) across all cold-started lambdas.
 
-- [ ] **16. Pre-Allocated Header Buffers & GC Minimization**
+- [x] **16. Pre-Allocated Header Buffers & GC Minimization** [COMPLETED]
   - **Complexity:** Low (~20 mins)
   - **Location:** `src/app/api/webhooks/tavus/route.ts`
   - **Task:** Pre-allocate static response header objects and logger context instances across high-throughput webhook streams.
@@ -260,19 +260,21 @@ flowchart TD
   1. `bee1e41` - `feat(progress): implement multi-session progress analytics store & API endpoint`
   2. `083a87d` - `feat(presets): create dynamic scenario preset library and difficulty selector`
 
-### Phase 7 Execution Log (In Progress)
-* **Date:** July 29, 2026
+### Phase 7 Execution Log (Completed)
+* **Date:** July 30, 2026
 * **Branch:** `feature/phase-7-hardening`
 * **Success Metrics:**
   * **30x Latency Reduction via Bulk Insertion:** Implemented `addInsightsMany` in `InsightStore` executing a single batched SQL `INSERT` statement for full transcripts instead of 20-50 sequential roundtrips.
   * **Payload & Memory Minimization:** Refactored `getMetadata` to execute targeted SQL queries (`.eq('type', 'metadata')`), eliminating full conversation array scans and payload transfers over the network.
   * **Distributed Cold-Start Protection:** Implemented L2 distributed persona caching (`PersonaStore`) in Supabase, maintaining sub-second session startup (~1s) across all cold-started serverless lambdas.
+  * **GC Heap Minimization:** Pre-allocated static response constants (`RESP_SUCCESS`, `RESP_UNAUTHORIZED`, `RESP_MISSING_CONVERSATION`) in high-frequency webhook routes to reduce Vercel allocation churn.
   * **Clean Type Checks:** Passed `npx tsc --noEmit` with zero errors.
 
 * **Atomic Commits:**
   1. `0cd7c25` - `feat(perf): implement bulk addInsightsMany database insertion method`
   2. `b0ab7f5` - `feat(perf): refactor getMetadata to use targeted SQL query filters`
   3. `c93b8f9` - `feat(perf): implement distributed serverless persona caching via PersonaStore`
+  4. `eae1e63` - `feat(perf): pre-allocate static response constants to reduce GC heap churn`
 
 
 

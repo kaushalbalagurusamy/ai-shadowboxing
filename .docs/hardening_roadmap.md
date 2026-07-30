@@ -185,6 +185,23 @@ flowchart TD
 
 ---
 
+### Phase 9: Automated Test Harness & Continuous Integration (CI)
+*Goal: Provide single-command automated test execution across all API boundaries, schemas, and logic.*
+
+- [x] **19. Full-Stack Integration & Boundary Test Suite** [COMPLETED]
+  - **Complexity:** Medium (~45 mins)
+  - **Location:** `src/lib/__tests__/e2e.test.ts`
+  - **Task:** Write comprehensive integration test suite verifying Zod schemas (`startSessionSchema`, `conversationIdSchema`, `mentorChatSchema`), HMAC webhook signatures, scenario presets, and progress score aggregation.
+  - **Impact:** Prevents regressions across all API routes and core logic.
+
+- [x] **20. Automated Test Runner Script (`npm run test`)** [COMPLETED]
+  - **Complexity:** Low (~15 mins)
+  - **Location:** `package.json` & `src/lib/__tests__/run-all-tests.ts`
+  - **Task:** Configure `npm run test` command running TypeScript verification (`tsc --noEmit`) and executing full integration test suite via `tsx`.
+  - **Impact:** Enables 1-step local and CI/CD automated validation.
+
+---
+
 ## Phase Matrix Summary
 
 | Phase | Task | Complexity | Dev DX Impact | Production Scale Readiness |
@@ -303,6 +320,18 @@ flowchart TD
 
 * **Atomic Commits:**
   1. `852357c` - `feat(mentor): implement interactive post-session M1 Mentor chat API & UI`
+
+### Phase 9 Execution Log (Completed)
+* **Date:** July 30, 2026
+* **Branch:** `feature/phase-9-hardening`
+* **Success Metrics:**
+  * **Full-Stack Integration Test Suite:** Created `src/lib/__tests__/e2e.test.ts` asserting 7 key test vectors (Zod boundary schemas, HMAC webhook signatures, scenario presets, progress score analytics, telemetry logs).
+  * **1-Step Test Execution:** Configured `npm run test` script running type checking (`tsc --noEmit`) and executing full test suite via `tsx` (0 failures).
+  * **Clean Verification:** Passed `npm run test` cleanly with code 0.
+
+* **Atomic Commits:**
+  1. `40af748` - `test(ci): implement automated full-stack integration test harness and npm test script`
+
 
 
 

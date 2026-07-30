@@ -168,6 +168,23 @@ flowchart TD
 
 ---
 
+### Phase 8: Interactive Mentor Chat & Actionable Drill Generation
+*Goal: Provide interactive post-session Q&A with the AI Mentor (M1) anchored in session performance data.*
+
+- [x] **17. Interactive Mentor Chat API Endpoint** [COMPLETED]
+  - **Complexity:** Medium (~45 mins)
+  - **Location:** `src/app/api/mentor/chat/route.ts`
+  - **Task:** Implement Gemini 3.1-powered conversational route handler accepting follow-up questions from the user, context-loaded with session transcript and synthesis data. Validate payload with Zod (`mentorChatSchema`).
+  - **Impact:** Enables real-time interactive Q&A and deeper debriefing with the M1 Mentor.
+
+- [x] **18. Mentor Discussion UI Component** [COMPLETED]
+  - **Complexity:** Medium (~45 mins)
+  - **Location:** `src/components/MentorChatContainer.tsx` & `src/components/NotesTab.tsx`
+  - **Task:** Create an interactive chat UI component within the Notes tab allowing seamless back-and-forth messaging with the M1 Mentor.
+  - **Impact:** Delivers an engaging, interactive debrief experience for users post-session.
+
+---
+
 ## Phase Matrix Summary
 
 | Phase | Task | Complexity | Dev DX Impact | Production Scale Readiness |
@@ -275,6 +292,18 @@ flowchart TD
   2. `b0ab7f5` - `feat(perf): refactor getMetadata to use targeted SQL query filters`
   3. `c93b8f9` - `feat(perf): implement distributed serverless persona caching via PersonaStore`
   4. `eae1e63` - `feat(perf): pre-allocate static response constants to reduce GC heap churn`
+
+### Phase 8 Execution Log (Completed)
+* **Date:** July 30, 2026
+* **Branch:** `feature/phase-8-hardening`
+* **Success Metrics:**
+  * **Interactive M1 Mentor Q&A:** Implemented conversational `/api/mentor/chat` API endpoint powered by Gemini 3.1 with Zod payload validation (`mentorChatSchema`).
+  * **Debrief UI Component:** Embedded `MentorChatContainer` within the Notes/Review dashboard allowing users to ask follow-up questions to their AI Mentor anchored in session performance logs.
+  * **Clean Type Checks:** Passed `npx tsc --noEmit` with zero errors.
+
+* **Atomic Commits:**
+  1. `852357c` - `feat(mentor): implement interactive post-session M1 Mentor chat API & UI`
+
 
 
 

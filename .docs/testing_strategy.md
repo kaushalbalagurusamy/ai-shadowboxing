@@ -51,15 +51,15 @@ flowchart TD
 
 ---
 
-### Phase 11-B: React Component UI Unit & Interaction Suite
+### Phase 11-B: React Component UI Unit & Interaction Suite [COMPLETED]
 * **Focus:** React components, DOM rendering, user event handlers, and tab navigation in isolation.
 * **Tools:** `@testing-library/react`, `@testing-library/user-event`, `vitest`.
 * **Guardrails & Scope:**
-  * Component tests for [`DateTab.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/DateTab.tsx) (preset selection, prompt input state, replica selection).
-  * Component tests for [`MentorTab.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/MentorTab.tsx) (synthesis rendering, M1/P1 prompt visualization).
-  * Component tests for [`NotesTab.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/NotesTab.tsx) (transcript turns, tool call badges, video jump-to-timestamp trigger).
-  * Component tests for [`MentorChatContainer.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/MentorChatContainer.tsx) (message input, sending state, M1 reply rendering).
-  * Component tests for [`AvatarSelector.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/AvatarSelector.tsx) & [`MediaStreamContainer.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/MediaStreamContainer.tsx).
+  * [x] Component tests for [`DateTab.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/DateTab.tsx) (preset selection, prompt input state, replica selection).
+  * [x] Component tests for [`MentorTab.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/MentorTab.tsx) (synthesis rendering, M1/P1 prompt visualization).
+  * [x] Component tests for [`NotesTab.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/NotesTab.tsx) (transcript turns, tool call badges, video jump-to-timestamp trigger).
+  * [x] Component tests for [`MentorChatContainer.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/MentorChatContainer.tsx) (message input, sending state, M1 reply rendering).
+  * [x] Component tests for [`AvatarSelector.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/AvatarSelector.tsx) & [`MediaStreamContainer.tsx`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/components/MediaStreamContainer.tsx).
 
 ---
 

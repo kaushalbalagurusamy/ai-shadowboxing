@@ -1,0 +1,57 @@
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { MentorTab } from '../MentorTab';
+
+describe('MentorTab React Component Unit Tests', () => {
+  const defaultProps = {
+    mentorReplicaId: 'r9d30b0e55ac',
+    setMentorReplicaId: vi.fn(),
+    mentorPrompt: 'Initial mentor prompt',
+    setMentorPrompt: vi.fn(),
+    mentorKnowledgeBase: 'Initial mentor KB',
+    setMentorKnowledgeBase: vi.fn(),
+    conversationUrl: null,
+    error: null,
+    isLoading: false,
+    isSynthesizing: false,
+    synthesis: null,
+    onStartSession: vi.fn(),
+  };
+
+  const mockSynthesis = {
+    audit: {
+      scores: { EQ: 8, IQ: 7, Wealth: 9, Physique: 8 },
+      primary_weakness: 'Nervous posture under pressure',
+      rationale: 'Client maintained solid vocal tone but exhibited physical stiffness.',
+    },
+    master_log: '# Master Performance Log\nTimestamped transcript aligned.',
+    mentor_prompt: {
+      system_instruction: 'You are M1, executive mentor.',
+      highlights: [],
+    },
+    next_partner_prompt: {
+      system_instruction: 'You are P1, standoffish partner.',
+    },
+  };
+
+  it('should render synthesizing indicator when isSynthesizing is true', () => {
+    render(<MentorTab {...defaultProps} isSynthesizing={true} />);
+    expect(screen.getByText(/Synthesis in progress.../i)).toBeDefined();
+  });
+
+  it('should render Knowledge Loaded status and Chat button when synthesis prop is provided', () => {
+    render(<MentorTab {...defaultProps} synthesis={mockSynthesis} />);
+
+    expect(screen.getByText(/✓ Knowledge Loaded/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /Chat with Mentor/i })).toBeDefined();
+  });
+
+  it('should trigger onStartSession when Chat with Mentor button is clicked', () => {
+    render(<MentorTab {...defaultProps} synthesis={mockSynthesis} />);
+    const chatBtn = screen.getByRole('button', { name: /Chat with Mentor/i });
+
+    fireEvent.click(chatBtn);
+    expect(defaultProps.onStartSession).toHaveBeenCalledWith('Initial mentor prompt', 'Initial mentor KB', 'Mentor');
+  });
+});

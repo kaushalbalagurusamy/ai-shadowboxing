@@ -9,7 +9,11 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/lib/__tests__/setup.ts'],
-    include: ['src/lib/__tests__/*-hermetic.test.ts', 'src/lib/__tests__/unit-*.test.ts'],
+    include: [
+      'src/lib/__tests__/*-hermetic.test.ts',
+      'src/lib/__tests__/unit-*.test.ts',
+      'src/components/__tests__/*.test.tsx'
+    ],
     alias: {
       '@': path.resolve(__dirname, './src'),
     },

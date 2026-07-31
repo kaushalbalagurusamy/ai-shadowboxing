@@ -26,6 +26,9 @@ This document establishes the architecture, guardrails, and implementation roadm
    * Tests must assert what the user observes in the DOM or receiving API boundaries rather than private React state or implementation details.
 5. **Isolated Token Context Execution:**
    * Test suite construction is partitioned into 3 discrete execution phases (Phase 11-A, 11-B, 11-C) to preserve full context window attention per testing domain.
+6. **Scaffolding & Structural Verification Scope (Non-Subjective):**
+   * **Explicit Scope Boundary:** The primary user success condition (human interpersonal growth and emotional resonance of AI coaching) is inherently subjective and cannot be machine-verified.
+   * **Target of Testing:** The test suite verifies **system scaffolding, architectural invariants, data contracts, state flow, security verification, and UI component stability**—guaranteeing that the engine runs reliably so the human-in-the-loop experience is flawless.
 
 ---
 

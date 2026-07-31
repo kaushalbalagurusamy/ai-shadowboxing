@@ -23,6 +23,7 @@ The project documentation is structured into four distinct cognitive pillars:
 | **Architecture** | [`.docs/architecture.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/architecture.md) | Technical architecture, WebRTC streams, Supabase schemas, and Gemini chain. |
 | **Product Vision** | [`.docs/product_requirements.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/product_requirements.md) | Core product vision, gamification loop (P0 → M1 → P1), and 4 High-Value rubrics. |
 | **Engineering Roadmap** | [`.docs/hardening_roadmap.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/hardening_roadmap.md) | 10-phase engineering hardening plan, execution logs, and benchmark metrics. |
+| **Testing Strategy** | [`.docs/testing_strategy.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/testing_strategy.md) | 3-phase testing roadmap, L11 hermeticity guardrails, and MSW/Playwright specs. |
 | **Phase 1 PRD** | [`.docs/phase_1_prd.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/phase_1_prd.md) | Historical PRD: P0 Baseline Sparring Partner implementation. |
 | **Phase 2 PRD** | [`.docs/phase_2_prd.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/phase_2_prd.md) | Historical PRD: M1 Mentor synthesis and the "Zipper" distillation engine. |
 | **Agent Directives** | [`GEMINI.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/GEMINI.md) | Google L9+ Operational Directives & L11+ Systems Performance Principles. |

@@ -19,9 +19,12 @@ This document establishes the architecture, guardrails, and implementation roadm
    * Zero real external network requests to Tavus CVI v2, Gemini API, or Supabase DB during test execution. All network boundaries must be intercepted using **MSW (Mock Service Worker v2)**.
 2. **Knuth's Critical 3% Rule (Speed & ESM):**
    * Unit and component tests must run in milliseconds using **Vitest** (native Vite/ESM runner) rather than slow Jest/Webpack toolchains.
-3. **User-Observed Assertions over Internal State:**
+3. **Quota & Billing Safety Guarantee (0 Tavus Minutes Consumed):**
+   * **Strict Requirement:** Running test suites must consume **exactly 0 seconds** of Tavus API WebRTC streaming quota (preserving the 20 min/month allocation).
+   * Network interception at the `fetch` and browser layers guarantees that calls to `POST /v2/conversations` or `POST /v2/personas` return synthetic MSW mock objects offline without touching Tavus production servers.
+4. **User-Observed Assertions over Internal State:**
    * Tests must assert what the user observes in the DOM or receiving API boundaries rather than private React state or implementation details.
-4. **Isolated Token Context Execution:**
+5. **Isolated Token Context Execution:**
    * Test suite construction is partitioned into 3 discrete execution phases (Phase 11-A, 11-B, 11-C) to preserve full context window attention per testing domain.
 
 ---

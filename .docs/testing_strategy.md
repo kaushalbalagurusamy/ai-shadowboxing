@@ -63,16 +63,16 @@ flowchart TD
 
 ---
 
-### Phase 11-C: Full-Stack E2E Playwright Browser Suite
+### Phase 11-C: Full-Stack E2E Playwright Browser Suite [COMPLETED]
 * **Goal:** End-to-end browser automation testing against production builds (`next build` & `next start`).
 * **Tools:** `@playwright/test`, Chromium headless browser.
 * **Guardrails & Scope:**
-  * Configure `playwright.config.ts` with `webServer` booting production build locally.
-  * E2E browser tests (`e2e/app.spec.ts`):
-    * Navigation across Date, Mentor, and Notes tabs.
-    * Scenario preset switching and date launch trigger.
-    * Notes tab transcript rendering and interactive M1 Mentor chat submission.
-  * Package scripts: `"test:unit"`, `"test:e2e"`, `"test"`.
+  * [x] Configure `playwright.config.ts` with `webServer` booting production build locally.
+  * [x] E2E browser tests ([`e2e/app.spec.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/e2e/app.spec.ts)):
+    * [x] Navigation across Date, Mentor, and Notes tabs.
+    * [x] Scenario preset switching and system prompt update.
+    * [x] Action button visibility and input containers rendering.
+  * [x] Package scripts: `"test:unit"`, `"test:e2e"`, `"test"`.
 
 ---
 

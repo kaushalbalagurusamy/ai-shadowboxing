@@ -1,0 +1,17 @@
+import { defineConfig } from 'vitest/config';
+// @ts-ignore
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/lib/__tests__/setup.ts'],
+    include: ['src/lib/__tests__/*-hermetic.test.ts', 'src/lib/__tests__/unit-*.test.ts'],
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});

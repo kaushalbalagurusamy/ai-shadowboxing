@@ -40,14 +40,14 @@ flowchart TD
     PhaseB --> PhaseC[Phase 11-C: Full-Stack E2E Browser Suite\nPlaywright]
 ```
 
-### Phase 11-A: Hermetic Unit & API Integration Testing Suite
+### Phase 11-A: Hermetic Unit & API Integration Testing Suite [COMPLETED]
 * **Focus:** Data stores, React hooks, Zod validation schemas, and serverless API route handlers.
 * **Tools:** `vitest`, `msw` (v2), `@testing-library/jest-dom`, `jsdom`.
 * **Guardrails & Scope:**
-  * Configure `vitest.config.ts` with App Router path aliases (`@/*`).
-  * Build MSW mock handlers ([`src/lib/__tests__/mocks/handlers.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/__tests__/mocks/handlers.ts)) mocking Tavus API routes, Supabase Storage, and Gemini SDK responses.
-  * Unit tests for [`personaStore.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/personaStore.ts), [`insightStore.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/insightStore.ts), [`progressStore.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/progressStore.ts), [`scenarioPresets.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/scenarioPresets.ts), and [`telemetry.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/telemetry.ts).
-  * API route integration tests for `/api/tavus`, `/api/webhooks/tavus`, `/api/synthesis`, `/api/progress`, and `/api/mentor/chat`.
+  * [x] Configure `vitest.config.ts` with App Router path aliases (`@/*`).
+  * [x] Build MSW mock handlers ([`src/lib/__tests__/mocks/handlers.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/__tests__/mocks/handlers.ts)) mocking Tavus API routes, Supabase Storage, and Gemini SDK responses.
+  * [x] Unit tests for [`personaStore.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/personaStore.ts), [`insightStore.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/insightStore.ts), [`progressStore.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/progressStore.ts), [`scenarioPresets.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/scenarioPresets.ts), and [`telemetry.ts`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/src/lib/telemetry.ts).
+  * [x] API route integration tests for `/api/tavus`, `/api/webhooks/tavus`, `/api/synthesis`, `/api/progress`, and `/api/mentor/chat`.
 
 ---
 

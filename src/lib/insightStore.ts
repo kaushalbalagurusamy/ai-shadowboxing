@@ -29,8 +29,9 @@ export interface SessionInsight {
   recordingUrl?: string | null;
   key?: string;
   value?: unknown;
-  configHash?: string;
+  palId?: string;
   personaId?: string;
+  configHash?: string;
 }
 
 class InsightStore {

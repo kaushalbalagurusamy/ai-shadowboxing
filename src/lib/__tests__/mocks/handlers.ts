@@ -1,9 +1,21 @@
 import { http, HttpResponse } from 'msw';
 
 export const handlers = [
-  // 1. Mock Tavus Persona Creation API
+  // 1. Mock Tavus PAL Creation API
+  http.post('https://tavusapi.com/v2/pals', async () => {
+    return HttpResponse.json({
+      pal_id: 'pal_mock_pal_123',
+      persona_id: 'p_mock_persona_123',
+      pal_name: 'Mock Shadowboxing Partner',
+      status: 'active',
+      created_at: new Date().toISOString(),
+    });
+  }),
+
+  // Legacy Tavus Persona Creation API fallback
   http.post('https://tavusapi.com/v2/personas', async () => {
     return HttpResponse.json({
+      pal_id: 'p_mock_persona_123',
       persona_id: 'p_mock_persona_123',
       persona_name: 'Mock Shadowboxing Partner',
       created_at: new Date().toISOString(),

@@ -124,3 +124,13 @@ flowchart TD
 * **Date:** July 30, 2026
 * **Key Outcome:** Verified Next.js Turbopack production build (`npm run build`) locally with 0 errors. Deployed production bundle to Vercel ([`ai-shadowboxing.vercel.app`](https://ai-shadowboxing.vercel.app)) with status `READY`.
 * **Commits:** `0249a34` (Phase 10 Production Build & Deployment Sync).
+
+### Phase 11: Retrospective Hermetic Testing Suite (Vitest + MSW v2 + Playwright)
+* **Date:** July 31, 2026
+* **Key Outcome:** Implemented 3-tier testing harness. Tier 1 (Vitest + MSW v2) intercepts Tavus, Gemini, and Supabase network calls offline (0 Tavus credits consumed, 28/28 passed in 49ms). Tier 2 (@testing-library/react) verifies component DOM rendering and user events. Tier 3 (Playwright + Chromium) automates full-stack browser journey against production build.
+* **Commits:** `29ed7ef` (Vitest + MSW Hermetic Unit Suite), `0e59b0b` (React Component UI Unit Suite), `b707fa4` (Playwright E2E Browser Suite).
+
+### Phase 12: Tavus PAL (Personified Application Layer) Migration Plan
+* **Date:** August 1, 2026
+* **Key Outcome:** Created comprehensive SOTA migration plan ([`.docs/tavus_pal_migration_plan.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/tavus_pal_migration_plan.md)) detailing transition from legacy `POST /v2/personas` to `POST /v2/pals`, model triad upgrade (Phoenix-4 + Raven-1 + Sparrow-1), dual-alias store fallback, and Google L11 performance invariants.
+* **Status:** Planned / Architecture Ready.

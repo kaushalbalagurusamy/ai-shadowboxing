@@ -1,8 +1,12 @@
 import { insightStore, getSupabase } from './insightStore';
 
 export class PersonaStore {
-  // Check distributed Supabase cache for an existing Tavus persona_id matching configHash
+  // Check distributed Supabase cache for an existing Tavus pal_id / persona_id matching configHash
   async getCachedPersonaId(configHash: string): Promise<string | null> {
+    return this.getCachedPalId(configHash);
+  }
+
+  async getCachedPalId(configHash: string): Promise<string | null> {
     const supabase = getSupabase();
     if (!supabase) return null;
 
@@ -11,7 +15,6 @@ export class PersonaStore {
         .from('insights')
         .select('data')
         .eq('conversation_id', 'global_persona_cache')
-        .eq('type', 'persona_mapping')
         .limit(50);
 
       if (error || !data) return null;
@@ -22,8 +25,8 @@ export class PersonaStore {
       });
 
       if (match) {
-        const val = match.data as { personaId?: string; value?: string };
-        return val.personaId || (val.value as string) || null;
+        const val = match.data as { palId?: string; personaId?: string; value?: string };
+        return val.palId || val.personaId || (val.value as string) || null;
       }
 
       return null;
@@ -32,14 +35,19 @@ export class PersonaStore {
     }
   }
 
-  // Persist a newly created persona_id globally so all serverless lambdas reuse it
-  async setCachedPersonaId(configHash: string, personaId: string): Promise<void> {
+  // Persist a newly created pal_id / persona_id globally so all serverless lambdas reuse it
+  async setCachedPersonaId(configHash: string, palId: string): Promise<void> {
+    return this.setCachedPalId(configHash, palId);
+  }
+
+  async setCachedPalId(configHash: string, palId: string): Promise<void> {
     await insightStore.addInsight('global_persona_cache', {
       type: 'persona_mapping',
       key: configHash,
-      value: personaId,
+      value: palId,
       configHash,
-      personaId,
+      palId,
+      personaId: palId,
       timestamp: new Date().toISOString()
     });
   }

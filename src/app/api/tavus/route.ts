@@ -1,25 +1,32 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { startSessionSchema } from '@/lib/schemas';
+import { startSessionSchema, tavusPalResponseSchema } from '@/lib/schemas';
 import { personaStore } from '@/lib/personaStore';
 
-// In-memory persona cache mapping SHA-256 config hash to Tavus persona_id
+// In-memory persona/PAL cache mapping SHA-256 config hash to Tavus pal_id
 const personaCache = new Map<string, string>();
 
-async function createTavusPersona(apiKey: string, combinedPrompt: string): Promise<string> {
-  const personaRes = await fetch("https://tavusapi.com/v2/personas", {
+async function createTavusPal(apiKey: string, combinedPrompt: string): Promise<string> {
+  const palRes = await fetch("https://tavusapi.com/v2/pals", {
     method: "POST",
     headers: {
       "x-api-key": apiKey,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      pal_name: "P0_Baseline_Sparring_Partner",
       persona_name: "P0_Baseline_Sparring_Partner",
       system_prompt: `${combinedPrompt}\n\nIMPORTANT: If the user fails to respond or remains silent for more than 10 seconds, or if you decide the date is over based on your rubrics, you must verbally excuse yourself and immediately call the 'end_conversation' tool.`,
       pipeline_mode: "full",
       layers: {
         stt: {
           stt_engine: "tavus-parakeet"
+        },
+        rendering: {
+          rendering_model: "phoenix-4"
+        },
+        timing: {
+          timing_model: "sparrow-1"
         },
         llm: {
           tools: [
@@ -71,9 +78,18 @@ async function createTavusPersona(apiKey: string, combinedPrompt: string): Promi
     })
   });
 
-  const personaData = await personaRes.json();
-  if (!personaRes.ok) throw new Error(personaData.message || "Failed to create persona");
-  return personaData.persona_id;
+  const palRawData = await palRes.json();
+  if (!palRes.ok) throw new Error(palRawData.message || "Failed to create Tavus PAL");
+
+  const parseResult = tavusPalResponseSchema.safeParse(palRawData);
+  if (!parseResult.success) {
+    // Dual-alias fallback
+    const palId = palRawData.pal_id || palRawData.persona_id;
+    if (palId) return palId;
+    throw new Error("Invalid Tavus PAL creation response format");
+  }
+
+  return parseResult.data.pal_id || parseResult.data.persona_id!;
 }
 
 export async function POST(req: Request) {
@@ -95,22 +111,22 @@ export async function POST(req: Request) {
     const combinedPrompt = `${systemPrompt}\n\nKNOWLEDGE BASE (RUBRICS):\n${knowledgeBase}`;
     const configHash = crypto.createHash('sha256').update(combinedPrompt).digest('hex');
 
-    // Multi-level Persona Caching (L1 In-Memory + L2 Distributed Store)
-    let personaId = personaCache.get(configHash);
-    if (!personaId) {
-      personaId = (await personaStore.getCachedPersonaId(configHash)) || undefined;
-      if (personaId) {
-        personaCache.set(configHash, personaId);
+    // Multi-level PAL Caching (L1 In-Memory + L2 Distributed Store)
+    let palId = personaCache.get(configHash);
+    if (!palId) {
+      palId = (await personaStore.getCachedPalId(configHash)) || undefined;
+      if (palId) {
+        personaCache.set(configHash, palId);
       }
     }
 
-    if (!personaId) {
-      personaId = await createTavusPersona(apiKey, combinedPrompt);
-      personaCache.set(configHash, personaId);
-      await personaStore.setCachedPersonaId(configHash, personaId);
+    if (!palId) {
+      palId = await createTavusPal(apiKey, combinedPrompt);
+      personaCache.set(configHash, palId);
+      await personaStore.setCachedPalId(configHash, palId);
     }
 
-    // Attempt conversation creation with personaId
+    // Attempt conversation creation with pal_id (dual-alias persona_id fallback)
     let conversationRes = await fetch("https://tavusapi.com/v2/conversations", {
       method: "POST",
       headers: {
@@ -119,7 +135,8 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         replica_id: replicaId || "r9d30b0e55ac",
-        persona_id: personaId,
+        pal_id: palId,
+        persona_id: palId,
         conversation_name: "Phase 1 Demo Session",
         callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`,
         properties: {
@@ -132,12 +149,12 @@ export async function POST(req: Request) {
 
     let conversationData = await conversationRes.json();
 
-    // Fallback: If cached persona ID was rejected/invalid, evict cache and recreate persona transparently
+    // Fallback: If cached PAL ID was rejected/invalid, evict cache and recreate PAL transparently
     if (!conversationRes.ok && (conversationRes.status === 400 || conversationRes.status === 404)) {
-      console.warn(`Cached personaId ${personaId} invalid/expired. Evicting cache and recreating...`);
+      console.warn(`Cached palId ${palId} invalid/expired. Evicting cache and recreating...`);
       personaCache.delete(configHash);
-      personaId = await createTavusPersona(apiKey, combinedPrompt);
-      personaCache.set(configHash, personaId);
+      palId = await createTavusPal(apiKey, combinedPrompt);
+      personaCache.set(configHash, palId);
 
       conversationRes = await fetch("https://tavusapi.com/v2/conversations", {
         method: "POST",
@@ -147,7 +164,8 @@ export async function POST(req: Request) {
         },
         body: JSON.stringify({
           replica_id: replicaId || "r9d30b0e55ac",
-          persona_id: personaId,
+          pal_id: palId,
+          persona_id: palId,
           conversation_name: "Phase 1 Demo Session",
           callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`,
           properties: {
@@ -175,4 +193,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

@@ -133,4 +133,9 @@ flowchart TD
 ### Phase 12: Tavus PAL (Personified Application Layer) Migration Plan
 * **Date:** August 1, 2026
 * **Key Outcome:** Created comprehensive SOTA migration plan ([`.docs/tavus_pal_migration_plan.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/tavus_pal_migration_plan.md)) detailing transition from legacy `POST /v2/personas` to `POST /v2/pals`, model triad upgrade (Phoenix-4 + Raven-1 + Sparrow-1), dual-alias store fallback, and Google L11 performance invariants.
+* **Commits:** `b95074c` (Tavus PAL API Migration & Model Triad Upgrade).
+
+### Phase 13: Custom PAL Visual Persistence & Selector Deprecation Plan
+* **Date:** August 1, 2026
+* **Key Outcome:** Created engineering plan ([`.docs/custom_pal_persistence_plan.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/custom_pal_persistence_plan.md)) detailing canonical identity binding (`default_face_id`), SHA-256 deduplication map caching, and avatar dropdown selector deprecation.
 * **Status:** Planned / Architecture Ready.

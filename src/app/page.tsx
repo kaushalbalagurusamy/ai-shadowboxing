@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { CORE_AVATARS } from "@/components/AvatarSelector";
+import { CANONICAL_PARTNER_FACE_ID, CANONICAL_MENTOR_FACE_ID } from "@/lib/constants";
 import { DateTab } from "@/components/DateTab";
 import { MentorTab } from "@/components/MentorTab";
 import { NotesTab } from "@/components/NotesTab";
@@ -25,9 +25,6 @@ export default function Home() {
   } = useTavusSession();
 
   const { insights, masterLog, synthesis } = useSessionInsights(conversationId);
-
-  const [dateReplicaId, setDateReplicaId] = useState<string>(CORE_AVATARS[0].id);
-  const [mentorReplicaId, setMentorReplicaId] = useState<string>(CORE_AVATARS[1].id);
 
   // Date States
   const [systemPrompt, setSystemPrompt] = useState(
@@ -65,7 +62,7 @@ export default function Home() {
       setConversationId(null);
       setConversationUrl(null);
     }
-    const currentReplicaId = label === 'Date' ? dateReplicaId : mentorReplicaId;
+    const currentReplicaId = label === 'Date' ? CANONICAL_PARTNER_FACE_ID : CANONICAL_MENTOR_FACE_ID;
     startSession(prompt, kb, label, currentReplicaId);
   };
 
@@ -105,8 +102,6 @@ export default function Home() {
 
         {activeTab === 'Date' && (
           <DateTab
-            dateReplicaId={dateReplicaId}
-            setDateReplicaId={setDateReplicaId}
             systemPrompt={systemPrompt}
             setSystemPrompt={setSystemPrompt}
             knowledgeBase={knowledgeBase}
@@ -120,8 +115,6 @@ export default function Home() {
 
         {activeTab === 'Mentor' && (
           <MentorTab
-            mentorReplicaId={mentorReplicaId}
-            setMentorReplicaId={setMentorReplicaId}
             mentorPrompt={mentorPrompt}
             setMentorPrompt={setMentorPrompt}
             mentorKnowledgeBase={mentorKnowledgeBase}

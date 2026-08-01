@@ -1,10 +1,7 @@
 import React from 'react';
-import { AvatarSelector } from './AvatarSelector';
 import { SessionSynthesis } from '@/hooks/useSessionInsights';
 
 interface MentorTabProps {
-  mentorReplicaId: string;
-  setMentorReplicaId: (id: string) => void;
   mentorPrompt: string;
   setMentorPrompt: (prompt: string) => void;
   mentorKnowledgeBase: string;
@@ -18,8 +15,6 @@ interface MentorTabProps {
 }
 
 export function MentorTab({
-  mentorReplicaId,
-  setMentorReplicaId,
   mentorPrompt,
   setMentorPrompt,
   mentorKnowledgeBase,
@@ -33,14 +28,6 @@ export function MentorTab({
 }: MentorTabProps) {
   return (
     <>
-      <AvatarSelector
-        id="mentorAvatarSelect"
-        label="Mentor Avatar"
-        value={mentorReplicaId}
-        onChange={setMentorReplicaId}
-        disabled={!!conversationUrl}
-      />
-
       <div className="input-group">
         <label htmlFor="mentorPrompt">Mentor Prompt</label>
         <textarea

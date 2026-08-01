@@ -5,8 +5,6 @@ import { MentorTab } from '../MentorTab';
 
 describe('MentorTab React Component Unit Tests', () => {
   const defaultProps = {
-    mentorReplicaId: 'r9d30b0e55ac',
-    setMentorReplicaId: vi.fn(),
     mentorPrompt: 'Initial mentor prompt',
     setMentorPrompt: vi.fn(),
     mentorKnowledgeBase: 'Initial mentor KB',

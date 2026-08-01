@@ -19,7 +19,7 @@ test.describe('AI Shadowboxing Full-Stack E2E Browser Journey', () => {
 
     // Click Mentor tab
     await page.locator('.tab', { hasText: 'Mentor' }).click();
-    await expect(page.getByText('Mentor Avatar')).toBeVisible();
+    await expect(page.locator('#mentorPrompt')).toBeVisible();
 
     // Click Notes tab
     await page.locator('.tab', { hasText: 'Notes' }).click();

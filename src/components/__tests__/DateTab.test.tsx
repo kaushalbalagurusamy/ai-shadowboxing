@@ -5,8 +5,6 @@ import { DateTab } from '../DateTab';
 
 describe('DateTab React Component Unit Tests', () => {
   const defaultProps = {
-    dateReplicaId: 'r9d30b0e55ac',
-    setDateReplicaId: vi.fn(),
     systemPrompt: 'Initial prompt text',
     setSystemPrompt: vi.fn(),
     knowledgeBase: 'Initial knowledge base text',

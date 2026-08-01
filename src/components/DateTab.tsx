@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-import { AvatarSelector } from './AvatarSelector';
 import { SCENARIO_PRESETS } from '@/lib/scenarioPresets';
 
 interface DateTabProps {
-  dateReplicaId: string;
-  setDateReplicaId: (id: string) => void;
   systemPrompt: string;
   setSystemPrompt: (prompt: string) => void;
   knowledgeBase: string;
@@ -16,8 +13,6 @@ interface DateTabProps {
 }
 
 export function DateTab({
-  dateReplicaId,
-  setDateReplicaId,
   systemPrompt,
   setSystemPrompt,
   knowledgeBase,
@@ -55,14 +50,6 @@ export function DateTab({
           ))}
         </select>
       </div>
-
-      <AvatarSelector
-        id="replicaSelect"
-        label="Avatar"
-        value={dateReplicaId}
-        onChange={setDateReplicaId}
-        disabled={!!conversationUrl}
-      />
 
       <div className="input-group">
         <label htmlFor="personaPrompt">Prompt</label>

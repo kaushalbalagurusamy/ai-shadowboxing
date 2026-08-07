@@ -6,7 +6,7 @@ import { personaStore } from '@/lib/personaStore';
 // In-memory persona/PAL cache mapping SHA-256 config hash to Tavus pal_id
 const personaCache = new Map<string, string>();
 
-async function createTavusPal(apiKey: string, combinedPrompt: string): Promise<string> {
+async function createTavusPal(apiKey: string, combinedPrompt: string, defaultFaceId?: string): Promise<string> {
   const palRes = await fetch("https://tavusapi.com/v2/pals", {
     method: "POST",
     headers: {
@@ -16,6 +16,7 @@ async function createTavusPal(apiKey: string, combinedPrompt: string): Promise<s
     body: JSON.stringify({
       pal_name: "P0_Baseline_Sparring_Partner",
       persona_name: "P0_Baseline_Sparring_Partner",
+      default_face_id: defaultFaceId || "r291e545fd67",
       system_prompt: `${combinedPrompt}\n\nIMPORTANT: If the user fails to respond or remains silent for more than 10 seconds, or if you decide the date is over based on your rubrics, you must verbally excuse yourself and immediately call the 'end_conversation' tool.`,
       pipeline_mode: "full",
       layers: {
@@ -121,7 +122,7 @@ export async function POST(req: Request) {
     }
 
     if (!palId) {
-      palId = await createTavusPal(apiKey, combinedPrompt);
+      palId = await createTavusPal(apiKey, combinedPrompt, replicaId);
       personaCache.set(configHash, palId);
       await personaStore.setCachedPalId(configHash, palId);
     }
@@ -134,7 +135,7 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        replica_id: replicaId || "r9d30b0e55ac",
+        replica_id: replicaId || "r291e545fd67",
         pal_id: palId,
         persona_id: palId,
         conversation_name: "Phase 1 Demo Session",
@@ -153,7 +154,7 @@ export async function POST(req: Request) {
     if (!conversationRes.ok && (conversationRes.status === 400 || conversationRes.status === 404)) {
       console.warn(`Cached palId ${palId} invalid/expired. Evicting cache and recreating...`);
       personaCache.delete(configHash);
-      palId = await createTavusPal(apiKey, combinedPrompt);
+      palId = await createTavusPal(apiKey, combinedPrompt, replicaId);
       personaCache.set(configHash, palId);
 
       conversationRes = await fetch("https://tavusapi.com/v2/conversations", {
@@ -163,7 +164,7 @@ export async function POST(req: Request) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          replica_id: replicaId || "r9d30b0e55ac",
+          replica_id: replicaId || "r291e545fd67",
           pal_id: palId,
           persona_id: palId,
           conversation_name: "Phase 1 Demo Session",

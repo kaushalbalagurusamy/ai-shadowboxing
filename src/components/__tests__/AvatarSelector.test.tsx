@@ -16,14 +16,14 @@ describe('AvatarSelector React Component Unit Tests', () => {
     render(<AvatarSelector {...defaultProps} />);
 
     expect(screen.getByLabelText('Select Sparring Partner Replica')).toBeDefined();
-    expect(screen.getByDisplayValue('Luna')).toBeDefined();
+    expect(screen.getByDisplayValue('Luna (Sparring Partner)')).toBeDefined();
   });
 
   it('should trigger onChange callback when user selects a different replica', () => {
     render(<AvatarSelector {...defaultProps} />);
     const select = screen.getByLabelText('Select Sparring Partner Replica');
 
-    fireEvent.change(select, { target: { value: 'r291e545fd67' } });
-    expect(defaultProps.onChange).toHaveBeenCalledWith('r291e545fd67');
+    fireEvent.change(select, { target: { value: 'r4ba1277e4fb' } });
+    expect(defaultProps.onChange).toHaveBeenCalledWith('r4ba1277e4fb');
   });
 });

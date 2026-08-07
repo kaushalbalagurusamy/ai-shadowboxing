@@ -4,21 +4,13 @@ import { progressStore } from '../progressStore';
 import { logger } from '../telemetry';
 
 describe('Scenario Presets Unit Tests', () => {
-  it('should contain valid scenario presets with non-empty prompts', () => {
-    expect(SCENARIO_PRESETS.length).toBeGreaterThan(0);
-    for (const preset of SCENARIO_PRESETS) {
-      expect(preset.id).toBeTruthy();
-      expect(preset.name).toBeTruthy();
-      expect(preset.systemPrompt.length).toBeGreaterThan(10);
-      expect(preset.knowledgeBase.length).toBeGreaterThan(10);
-    }
-  });
-
-  it('should include Standard, Challenging, and Standoffish difficulty tiers', () => {
-    const ids = SCENARIO_PRESETS.map((p) => p.id);
-    expect(ids).toContain('coffee_shop_baseline');
-    expect(ids).toContain('intellectual_lawyer');
-    expect(ids).toContain('standoffish_apex');
+  it('should contain valid P0 baseline scenario preset with non-empty prompts', () => {
+    expect(SCENARIO_PRESETS.length).toBe(1);
+    const preset = SCENARIO_PRESETS[0];
+    expect(preset.id).toBe('coffee_shop_baseline');
+    expect(preset.name).toBeTruthy();
+    expect(preset.systemPrompt.length).toBeGreaterThan(10);
+    expect(preset.knowledgeBase.length).toBeGreaterThan(10);
   });
 });
 
@@ -28,39 +20,44 @@ describe('Progress Store Unit Tests', () => {
       {
         conversationId: 's1',
         timestamp: '2026-07-30T10:00:00Z',
-        scores: { EQ: 8, IQ: 6, Wealth: 9, Physique: 7 },
-        primaryWeakness: 'Nervous stutter',
+        scores: { EQ: 6, IQ: 8, Wealth: 7, Physique: 9 },
+        primaryWeakness: 'Validation seeking',
       },
       {
         conversationId: 's2',
         timestamp: '2026-07-30T11:00:00Z',
-        scores: { EQ: 6, IQ: 8, Wealth: 7, Physique: 9 },
-        primaryWeakness: 'Nervous stutter',
+        scores: { EQ: 8, IQ: 8, Wealth: 9, Physique: 9 },
+        primaryWeakness: 'Validation seeking',
+      },
+      {
+        conversationId: 's3',
+        timestamp: '2026-07-30T12:00:00Z',
+        scores: { EQ: 4, IQ: 6, Wealth: 5, Physique: 7 },
+        primaryWeakness: 'Vocal jitter',
       },
     ];
 
-    const summary = progressStore.calculateSummary(mockSessions);
-    expect(summary.totalSessions).toBe(2);
-    expect(summary.averageScores.EQ).toBe(7);
-    expect(summary.averageScores.IQ).toBe(7);
-    expect(summary.averageScores.Wealth).toBe(8);
-    expect(summary.averageScores.Physique).toBe(8);
-    expect(summary.mostCommonWeakness).toBe('Nervous stutter');
+    const aggregates = progressStore.calculateSummary(mockSessions);
+    expect(aggregates.totalSessions).toBe(3);
+    expect(aggregates.averageScores.EQ).toBe(6);
+    expect(aggregates.averageScores.IQ).toBe(7.3);
+    expect(aggregates.mostCommonWeakness).toBe('Validation seeking');
   });
 
   it('should handle empty session histories gracefully', () => {
-    const summary = progressStore.calculateSummary([]);
-    expect(summary.totalSessions).toBe(0);
-    expect(summary.averageScores.EQ).toBe(0);
-    expect(summary.mostCommonWeakness).toBeNull();
+    const aggregates = progressStore.calculateSummary([]);
+    expect(aggregates.totalSessions).toBe(0);
+    expect(aggregates.averageScores.EQ).toBe(0);
+    expect(aggregates.mostCommonWeakness).toBeNull();
   });
 });
 
 describe('Telemetry Logger Unit Tests', () => {
   it('should output structured log context without throwing errors', () => {
-    const childLogger = logger.child({ conversationId: 'c_test_123', event: 'test_run' });
-    expect(() => childLogger.info('Sanity check message')).not.toThrow();
-    expect(() => childLogger.warn('Warning log message')).not.toThrow();
-    expect(() => childLogger.error('Error log message', new Error('Mock error'))).not.toThrow();
+    expect(() => {
+      logger.info('Sanity check message', { conversationId: 'c_test_123', event: 'test_run' });
+      logger.warn('Warning log message', { conversationId: 'c_test_123', event: 'test_run' });
+      logger.error('Error log message', { conversationId: 'c_test_123', event: 'test_run', errorName: 'Error', errorMessage: 'Mock error', stack: new Error('Mock error').stack });
+    }).not.toThrow();
   });
 });

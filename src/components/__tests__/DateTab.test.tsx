@@ -15,10 +15,9 @@ describe('DateTab React Component Unit Tests', () => {
     onStartSession: vi.fn(),
   };
 
-  it('should render DateTab inputs, preset selector, and action buttons', () => {
+  it('should render DateTab inputs and action buttons', () => {
     render(<DateTab {...defaultProps} />);
 
-    expect(screen.getByText(/Scenario Challenge/i)).toBeDefined();
     expect(screen.getByDisplayValue('Initial prompt text')).toBeDefined();
     expect(screen.getByDisplayValue('Initial knowledge base text')).toBeDefined();
     expect(screen.getByRole('button', { name: /Date/i })).toBeDefined();

@@ -28,21 +28,15 @@ test.describe('AI Shadowboxing Full-Stack E2E Browser Journey', () => {
 
     // Click back to Date tab
     await page.locator('.tab', { hasText: 'Date' }).click();
-    await expect(page.getByText('Scenario Challenge')).toBeVisible();
+    await expect(page.locator('#personaPrompt')).toBeVisible();
   });
 
-  test('should update system prompt when scenario preset is selected', async ({ page }) => {
+  test('should display initial baseline persona prompt', async ({ page }) => {
     await page.goto('/');
 
-    const presetSelect = page.locator('#presetSelect');
-    await expect(presetSelect).toBeVisible();
-
-    // Select Challenging scenario preset
-    await presetSelect.selectOption('intellectual_lawyer');
-    
-    // Check prompt textarea updated
     const promptTextarea = page.locator('#personaPrompt');
-    await expect(promptTextarea).toContainText('corporate litigation partner');
+    await expect(promptTextarea).toBeVisible();
+    await expect(promptTextarea).toContainText('first date at a coffee shop');
   });
 
   test('should display action buttons and input containers', async ({ page }) => {

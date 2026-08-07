@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const CORE_AVATARS = [
-  { id: "r9d30b0e55ac", name: "Luna (Sparring Partner)" },
+  { id: "r291e545fd67", name: "Gabby (Sparring Partner)" },
   { id: "r4ba1277e4fb", name: "Darius (Executive Mentor)" }
 ] as const;
 

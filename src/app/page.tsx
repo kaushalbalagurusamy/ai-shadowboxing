@@ -144,6 +144,23 @@ export default function Home() {
       </div>
 
       <MediaStreamContainer conversationUrl={conversationUrl} />
+
+      <div style={{
+        position: 'fixed',
+        bottom: '12px',
+        left: '12px',
+        background: 'rgba(0,0,0,0.65)',
+        color: '#00ffcc',
+        padding: '4px 10px',
+        fontSize: '0.75rem',
+        fontFamily: 'monospace',
+        borderRadius: '4px',
+        zIndex: 9999,
+        pointerEvents: 'none',
+        border: '1px solid rgba(0,255,204,0.3)'
+      }}>
+        v1.0.2 (PAL Fix - Gabby)
+      </div>
     </div>
   );
 }

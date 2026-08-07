@@ -127,7 +127,7 @@ export async function POST(req: Request) {
       await personaStore.setCachedPalId(configHash, palId);
     }
 
-    // Attempt conversation creation with pal_id (dual-alias persona_id fallback)
+    // Attempt conversation creation with pal_id
     let conversationRes = await fetch("https://tavusapi.com/v2/conversations", {
       method: "POST",
       headers: {
@@ -137,7 +137,6 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         replica_id: replicaId || "r291e545fd67",
         pal_id: palId,
-        persona_id: palId,
         conversation_name: "Phase 1 Demo Session",
         callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`,
         properties: {
@@ -166,7 +165,6 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           replica_id: replicaId || "r291e545fd67",
           pal_id: palId,
-          persona_id: palId,
           conversation_name: "Phase 1 Demo Session",
           callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`,
           properties: {

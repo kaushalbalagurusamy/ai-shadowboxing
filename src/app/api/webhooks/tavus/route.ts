@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { insightStore } from '@/lib/insightStore';
 import { logger } from '@/lib/telemetry';
+import { fetchAndIngestTavusConversation } from '@/lib/tavusSync';
 import crypto from 'crypto';
 
 // Pre-allocated static response instances to minimize heap allocation churn (L11 Principle)
@@ -67,6 +68,9 @@ export async function POST(req: Request) {
         recordingUrl: finalRecordingUrl,
         timestamp: new Date().toISOString()
       });
+
+      // Active pull fallback from Tavus API to guarantee transcript turns are present before synthesis
+      await fetchAndIngestTavusConversation(conversationId);
 
       try {
         const { executeSynthesis } = await import('@/app/api/synthesis/route');

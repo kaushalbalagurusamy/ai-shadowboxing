@@ -57,12 +57,17 @@ const coachSchema = {
   required: ["audit", "mentor_prompt", "next_partner_prompt"],
 };
 
+import { fetchAndIngestTavusConversation } from '@/lib/tavusSync';
+
 export async function executeSynthesis(conversationId: string) {
+  // Actively pull latest transcript, perception analysis, and behavioral cues from Tavus API
+  await fetchAndIngestTavusConversation(conversationId);
+
   const insights = await insightStore.getInsights(conversationId);
   const knowledgeBase = await insightStore.getMetadata(conversationId, 'knowledge_base');
   
   if (insights.length === 0) {
-    throw new Error("No data found for this session.");
+    throw new Error("No data found for this session after Tavus API sync.");
   }
 
   // --- PASS 1: THE ZIPPER (Context Distillation) ---

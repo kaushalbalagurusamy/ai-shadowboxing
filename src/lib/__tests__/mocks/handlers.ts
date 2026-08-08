@@ -40,6 +40,31 @@ export const handlers = [
     });
   }),
 
+  // Mock Tavus GET Conversation verbose API
+  http.get('https://tavusapi.com/v2/conversations/:id', async ({ params }) => {
+    return HttpResponse.json({
+      conversation_id: params.id,
+      status: 'ended',
+      events: [
+        {
+          event_type: 'application.transcription_ready',
+          properties: {
+            transcript: [
+              { role: 'user', content: 'Hi, nice to meet you!', timestamp: 1786139039.5 },
+              { role: 'assistant', content: 'Hello there!', timestamp: 1786139042.1 }
+            ]
+          }
+        },
+        {
+          event_type: 'application.perception_analysis',
+          properties: {
+            perception_analysis: { overall: 'Solid composure' }
+          }
+        }
+      ]
+    });
+  }),
+
   // 4. Mock Gemini API calls (Generative AI endpoint)
   http.post('https://generativelanguage.googleapis.com/*', async () => {
     return HttpResponse.json({

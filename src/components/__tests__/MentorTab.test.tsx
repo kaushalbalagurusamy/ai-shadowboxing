@@ -38,16 +38,16 @@ describe('MentorTab React Component Unit Tests', () => {
     expect(screen.getByText(/Synthesis in progress.../i)).toBeDefined();
   });
 
-  it('should render Knowledge Loaded status and Chat button when synthesis prop is provided', () => {
+  it('should render Knowledge Loaded status and Learn button when synthesis prop is provided', () => {
     render(<MentorTab {...defaultProps} synthesis={mockSynthesis} />);
 
     expect(screen.getByText(/✓ Post-Session Knowledge Loaded/i)).toBeDefined();
-    expect(screen.getByRole('button', { name: /Chat with Mentor/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Learn/i })).toBeDefined();
   });
 
-  it('should render default Chat with Mentor button even when synthesis prop is null', () => {
+  it('should render default Learn button even when synthesis prop is null', () => {
     render(<MentorTab {...defaultProps} synthesis={null} />);
-    const chatBtn = screen.getByRole('button', { name: /Chat with Mentor/i });
+    const chatBtn = screen.getByRole('button', { name: /Learn/i });
     expect(chatBtn).toBeDefined();
 
     fireEvent.click(chatBtn);

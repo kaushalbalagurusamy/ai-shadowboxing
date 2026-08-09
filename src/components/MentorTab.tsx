@@ -75,7 +75,7 @@ export function MentorTab({
                 style={{ background: 'var(--pastel-green)', color: 'var(--pastel-green-text)', borderColor: 'transparent', width: '100%' }}
                 disabled={isLoading}
               >
-                {isLoading ? "Provisioning..." : "Chat with Mentor"}
+                {isLoading ? "Provisioning..." : "Learn"}
               </button>
             </div>
           ) : (
@@ -89,7 +89,7 @@ export function MentorTab({
                 style={{ width: '100%' }}
                 disabled={isLoading}
               >
-                {isLoading ? "Provisioning..." : "Chat with Mentor"}
+                {isLoading ? "Provisioning..." : "Learn"}
               </button>
             </div>
           )}

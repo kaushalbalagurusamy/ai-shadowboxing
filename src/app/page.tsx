@@ -43,10 +43,15 @@ export default function Home() {
   const toolsRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Auto-update mentor prompt when synthesis lands
+  // Auto-update mentor prompt (M[n+1]) and next partner prompt (P[n+1]) when synthesis lands
   useEffect(() => {
     if (synthesis) {
-      setMentorPrompt(synthesis.mentor_prompt.system_instruction);
+      if (synthesis.mentor_prompt?.system_instruction) {
+        setMentorPrompt(synthesis.mentor_prompt.system_instruction);
+      }
+      if (synthesis.next_partner_prompt?.system_instruction) {
+        setSystemPrompt(synthesis.next_partner_prompt.system_instruction);
+      }
       setIsSynthesizing(false);
     }
   }, [synthesis, setIsSynthesizing]);

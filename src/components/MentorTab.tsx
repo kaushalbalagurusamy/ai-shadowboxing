@@ -67,19 +67,30 @@ export function MentorTab({
           ) : synthesis ? (
             <div>
               <div style={{ color: 'var(--pastel-green-text)', fontWeight: 600, marginBottom: '8px' }}>
-                ✓ Knowledge Loaded
+                ✓ Post-Session Knowledge Loaded
               </div>
               <button 
                 className="btn btn-primary" 
                 onClick={() => onStartSession(mentorPrompt, mentorKnowledgeBase, 'Mentor')} 
                 style={{ background: 'var(--pastel-green)', color: 'var(--pastel-green-text)', borderColor: 'transparent', width: '100%' }}
+                disabled={isLoading}
               >
                 {isLoading ? "Provisioning..." : "Chat with Mentor"}
               </button>
             </div>
           ) : (
-            <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-              The Mentor is watching. Finish your Date to trigger synthesis.
+            <div>
+              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '12px' }}>
+                The Mentor is watching. Finish a Date to generate custom feedback, or start a general coaching session below.
+              </div>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => onStartSession(mentorPrompt, mentorKnowledgeBase, 'Mentor')} 
+                style={{ width: '100%' }}
+                disabled={isLoading}
+              >
+                {isLoading ? "Provisioning..." : "Chat with Mentor"}
+              </button>
             </div>
           )}
         </div>

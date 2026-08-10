@@ -123,6 +123,22 @@ export function NotesTab({
           ) : synthesis ? (
             <div className="notes-container" style={{ gap: '12px' }}>
               <div className="insight-card" style={{ background: '#ffffff', border: 'none' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div className={`badge ${synthesis.passed ? 'badge-green' : 'badge-red'}`} style={{ fontSize: '0.85rem', padding: '6px 12px', fontWeight: 700 }}>
+                    {synthesis.passed ? '✓ PASS: 90% Gate Unlocked' : '✕ RETRY: Level Gate Failed'}
+                  </div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: synthesis.passed ? 'var(--pastel-green-text)' : 'var(--danger)' }}>
+                    Score: {synthesis.median_score ?? synthesis.final_score ?? 0}/100
+                  </div>
+                </div>
+
+                {synthesis.value_leak_identified && (
+                  <div style={{ marginBottom: '12px', padding: '10px', background: 'rgba(255,0,0,0.04)', borderRadius: '6px', borderLeft: '3px solid var(--danger)' }}>
+                    <div className="note-label" style={{ color: 'var(--danger)', fontWeight: 700 }}>Identified Value Leak</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{synthesis.value_leak_identified}</div>
+                  </div>
+                )}
+
                 <div className="badge-row" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '12px' }}>
                   {Object.entries(synthesis.audit.scores).map(([k, v]) => (
                     <div key={k} className="badge badge-blue" style={{ marginBottom: 0 }}>{k}: {v}/10</div>
@@ -132,19 +148,41 @@ export function NotesTab({
                 <div style={{ fontWeight: 600, marginBottom: '8px' }}>{synthesis.audit.primary_weakness}</div>
                 <div style={{ fontSize: '0.8rem', lineHeight: '1.4', opacity: 0.8 }}>{synthesis.audit.rationale}</div>
               </div>
+
+              {synthesis.rubric_evaluations && synthesis.rubric_evaluations.length > 0 && (
+                <div className="notes-section" style={{ marginTop: '4px', marginBottom: '4px' }}>
+                  <div className="notes-section-title" style={{ fontSize: '0.75rem' }}>Deterministic Rubric Evaluations (maj@3)</div>
+                  <div className="scroll-box" style={{ maxHeight: '180px', background: '#ffffff' }}>
+                    {synthesis.rubric_evaluations.map((item, idx) => (
+                      <div key={idx} className="note-item" style={{ padding: '8px', fontSize: '0.78rem', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                          <span style={{ fontWeight: 600 }}>{idx + 1}. {item.criterion}</span>
+                          <span className={`badge ${item.pass ? 'badge-green' : 'badge-red'}`} style={{ fontSize: '0.7rem' }}>
+                            {item.pass ? 'PASS' : 'FAIL'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', opacity: 0.7 }}>
+                          {item.timestamp_reference && <span>Ref: {item.timestamp_reference} | </span>}
+                          {item.multimodal_evidence}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div className="note-item" style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', background: '#ffffff', borderColor: 'var(--border)' }}>
                 <div className="note-label">Mentor Prompt (M1)</div>
-                {synthesis.mentor_prompt.system_instruction}
+                {synthesis.mentor_prompt_m1?.system_instruction || synthesis.mentor_prompt?.system_instruction}
               </div>
 
               <div className="note-item" style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', background: '#ffffff', borderColor: 'var(--border)' }}>
                 <div className="note-label">Next Partner Prompt (P1)</div>
-                {synthesis.next_partner_prompt.system_instruction}
+                {synthesis.partner_prompt_p1?.system_instruction || synthesis.next_partner_prompt?.system_instruction}
                 <button 
                   className="btn btn-primary" 
                   style={{ marginTop: '12px', fontSize: '0.75rem', padding: '6px 12px', width: 'auto' }}
-                  onClick={() => onApplyNextPartnerPrompt(synthesis.next_partner_prompt.system_instruction)}
+                  onClick={() => onApplyNextPartnerPrompt(synthesis.partner_prompt_p1?.system_instruction || synthesis.next_partner_prompt?.system_instruction || '')}
                 >
                   Apply P1 to Next Date
                 </button>

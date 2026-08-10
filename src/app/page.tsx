@@ -48,11 +48,14 @@ export default function Home() {
   // Auto-update mentor prompt (M[n+1]) and next partner prompt (P[n+1]) when synthesis lands
   useEffect(() => {
     if (synthesis) {
-      if (synthesis.mentor_prompt?.system_instruction) {
-        setMentorPrompt(synthesis.mentor_prompt.system_instruction);
+      const mentorInst = synthesis.mentor_prompt_m1?.system_instruction || synthesis.mentor_prompt?.system_instruction;
+      const partnerInst = synthesis.partner_prompt_p1?.system_instruction || synthesis.next_partner_prompt?.system_instruction;
+
+      if (mentorInst) {
+        setMentorPrompt(mentorInst);
       }
-      if (synthesis.next_partner_prompt?.system_instruction) {
-        setSystemPrompt(synthesis.next_partner_prompt.system_instruction);
+      if (partnerInst) {
+        setSystemPrompt(partnerInst);
       }
       setIsSynthesizing(false);
     }

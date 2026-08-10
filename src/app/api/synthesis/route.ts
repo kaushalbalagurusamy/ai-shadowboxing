@@ -3,10 +3,27 @@ import { insightStore } from '@/lib/insightStore';
 import { geminiModel } from '@/lib/gemini';
 import { SchemaType } from '@google/generative-ai';
 import { conversationIdSchema } from '@/lib/schemas';
+import { fetchAndIngestTavusConversation } from '@/lib/tavusSync';
 
 const coachSchema = {
   type: SchemaType.OBJECT,
   properties: {
+    value_leak_identified: { type: SchemaType.STRING },
+    rubric_evaluations: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          criterion: { type: SchemaType.STRING },
+          timestamp_reference: { type: SchemaType.STRING },
+          multimodal_evidence: { type: SchemaType.STRING },
+          pass: { type: SchemaType.BOOLEAN },
+        },
+        required: ["criterion", "timestamp_reference", "multimodal_evidence", "pass"],
+      },
+    },
+    final_score: { type: SchemaType.INTEGER },
+    passed: { type: SchemaType.BOOLEAN },
     audit: {
       type: SchemaType.OBJECT,
       properties: {
@@ -25,7 +42,7 @@ const coachSchema = {
       },
       required: ["scores", "primary_weakness", "rationale"],
     },
-    mentor_prompt: {
+    mentor_prompt_m1: {
       type: SchemaType.OBJECT,
       properties: {
         system_instruction: { type: SchemaType.STRING },
@@ -45,7 +62,7 @@ const coachSchema = {
       },
       required: ["system_instruction", "highlights"],
     },
-    next_partner_prompt: {
+    partner_prompt_p1: {
       type: SchemaType.OBJECT,
       properties: {
         system_instruction: { type: SchemaType.STRING },
@@ -54,10 +71,16 @@ const coachSchema = {
       required: ["system_instruction", "focus_area"],
     },
   },
-  required: ["audit", "mentor_prompt", "next_partner_prompt"],
+  required: [
+    "value_leak_identified",
+    "rubric_evaluations",
+    "final_score",
+    "passed",
+    "audit",
+    "mentor_prompt_m1",
+    "partner_prompt_p1",
+  ],
 };
-
-import { fetchAndIngestTavusConversation } from '@/lib/tavusSync';
 
 export async function executeSynthesis(conversationId: string) {
   // Actively pull latest transcript, perception analysis, and behavioral cues from Tavus API
@@ -106,53 +129,96 @@ export async function executeSynthesis(conversationId: string) {
   // Store distilled log
   await insightStore.setMetadata(conversationId, 'master_performance_log', masterLog);
 
-  // --- PASS 2: THE COACH (Synthesis) ---
+  // --- PASS 2: DETERMINISTIC MAJ@3 PARALLEL ENSEMBLE ---
   const coachPrompt = `
-    You are the "Head Coach" of the AI Shadowboxing simulator. You are an expert in behavioral psychology, high-stakes social dynamics, and the "4 Pillars of High Value" (EQ, IQ, Wealth, and Physique).
+    You are the "Head Coach & Progression Evaluator" of the AI Shadowboxing simulator. You perform forensic audits of user social dynamics against strict high-value rubrics (EQ, IQ, Wealth, Physique).
 
     ### INPUT DATA:
     1. THE MASTER PERFORMANCE LOG:
     ${masterLog}
 
-    2. THE KNOWLEDGE BASE (RUBRICS):
+    2. KNOWLEDGE BASE & RUBRICS:
     ${knowledgeBase || "Default rubrics: EQ, IQ, Wealth, Physique."}
 
     ---
 
-    ### TASK 1: The Forensic Audit
-    Analyze the Master Performance Log. Assign a score (1-10) for each pillar based on the user's performance. Identify the "Single Greatest Weakness" (the "Value Leak") that most significantly caused the date to lose interest.
+    ### INSTRUCTIONS & EVALUATION STEPS:
 
-    ### TASK 2: Generate the Mentor Prompt (M1)
-    Create a system prompt for a Tavus Mentor (Darius). 
-    - The Shell: "You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable."
-    - Length & Duration Constraint: STRICT MAXIMUM OF 75 WORDS (MUST be deliverable aloud in under 30 seconds).
-    - Instructions: 
-      1. Affirm one or two specific moments where the user displayed high value.
-      2. Surgically deconstruct the One Key Weakness (Value Leak) and provide 1 practical fix for their next date sparring session.
-      3. Reference specific timestamps or Turn IDs from the log.
-      4. Conclude by opening the floor for client questions.
-    - Video Metadata (Hidden): In your response, provide a list of "Clip Highlights." For every strength or weakness you mention, include the exact ISO timestamp or Turn ID from the log.
+    1. VALUE LEAK AUDIT:
+       - Identify the user's "Single Greatest Weakness" (the \`value_leak_identified\`) that caused the date to lose interest. Populate \`audit.primary_weakness\` and \`audit.rationale\`.
+       - Assign 1-10 scores for EQ, IQ, Wealth, and Physique in \`audit.scores\`.
 
-    ### TASK 3: Generate the Next Partner Prompt (P1)
-    Create a system prompt for the next Tavus Sparring Partner.
-    - The Shell: "You are an attractive woman on a first date. You are high-value and your time is precious. You are initially standoffish and have a screening tone."
-    - Evolutionary Instruction: The partner must naturally "stress test" the specific Value Leak identified in the previous session. 
-    - Implementation: If the weakness was IQ/Wealth, she should be intellectually demanding or unimpressed by surface-level material claims. If the weakness was Physique/EQ, she should call out fidgeting or lack of presence immediately in the flow of conversation. 
-    - Length Constraint: Keep the prompt length similar to the original P0 prompt (~150-200 words).
+    2. CHAIN-OF-THOUGHT RUBRIC EVALUATION (10 Localized Criteria):
+       - Generate an array of EXACTLY 10 binary criteria (Yes/No) specifically tailored to stress-test the \`value_leak_identified\`.
+       - For each item, populate \`criterion\`, \`timestamp_reference\`, and \`multimodal_evidence\` (citing exact Raven cues or transcript lines) BEFORE outputting the boolean \`pass\`.
+
+    3. DETERMINISTIC SCORE & 90% GATEWAY:
+       - Calculate \`final_score\` strictly as (number of true \`pass\` values * 10).
+       - Set \`passed = true\` IF AND ONLY IF \`final_score >= 90\`. Otherwise \`passed = false\`.
+
+    4. MENTOR PROMPT GENERATION (M1):
+       - Shell: "You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable."
+       - Length Constraint: STRICT MAXIMUM OF 75 WORDS (MUST be deliverable aloud in under 30 seconds).
+       - Instructions:
+         - Affirm 1-2 high-value moments.
+         - Surgically deconstruct \`value_leak_identified\` and provide 1 practical fix for their next session.
+         - Reference specific timestamps or Turn IDs from the log.
+         - Conclude by opening the floor for client questions.
+
+    5. NEXT PARTNER PROMPT GENERATION (P1):
+       - Shell: "You are a very attractive mid 20s woman (working a 500k corporate lawyer job in NYC) on a first date in a coffee shop."
+       - If passed (>=90): Generate Level P(n+1) system prompt introducing higher difficulty dynamics (~150-200 words).
+       - If failed (<90): Generate Level P(n) retry prompt that naturally stress-tests the specific \`value_leak_identified\` (~150-200 words).
   `;
 
-  const coachResult = await geminiModel.generateContent(coachPrompt, {
-    responseMimeType: "application/json",
-    responseSchema: coachSchema as any,
-  });
-  const coachData = JSON.parse(coachResult.response.text());
+  // Helper for single thread evaluation with 1 auto-retry
+  const executeEvaluationThread = async () => {
+    try {
+      const res = await geminiModel.generateContent(coachPrompt, {
+        responseMimeType: "application/json",
+        responseSchema: coachSchema as any,
+      });
+      return JSON.parse(res.response.text());
+    } catch {
+      // Retry once on thread failure
+      const retryRes = await geminiModel.generateContent(coachPrompt, {
+        responseMimeType: "application/json",
+        responseSchema: coachSchema as any,
+      });
+      return JSON.parse(retryRes.response.text());
+    }
+  };
+
+  // Execute maj@3 parallel ensemble (3 concurrent promises)
+  const ensembleRuns = await Promise.all([
+    executeEvaluationThread(),
+    executeEvaluationThread(),
+    executeEvaluationThread(),
+  ]);
+
+  // Sort runs by final_score ascending to find median (index 1)
+  ensembleRuns.sort((a, b) => (a.final_score ?? 0) - (b.final_score ?? 0));
+  const medianRun = ensembleRuns[1];
+  const ensembleScores = ensembleRuns.map((r) => r.final_score ?? 0);
+  const medianScore = medianRun.final_score ?? 0;
+  const isPassed = medianScore >= 90;
+
+  const synthesisResult = {
+    ...medianRun,
+    median_score: medianScore,
+    ensemble_scores: ensembleScores,
+    passed: isPassed,
+    // Backwards compatibility aliases
+    mentor_prompt: medianRun.mentor_prompt_m1,
+    next_partner_prompt: medianRun.partner_prompt_p1,
+  };
 
   // Store synthesis results
-  await insightStore.setMetadata(conversationId, 'session_synthesis', coachData);
+  await insightStore.setMetadata(conversationId, 'session_synthesis', synthesisResult);
 
   return {
     masterPerformanceLog: masterLog,
-    synthesis: coachData,
+    synthesis: synthesisResult,
   };
 }
 
@@ -178,4 +244,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

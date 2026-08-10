@@ -1,13 +1,26 @@
 import { useState, useEffect } from 'react';
 import { insightStore, SessionInsight } from '@/lib/insightStore';
 
+export interface RubricEvaluationItem {
+  criterion: string;
+  timestamp_reference: string;
+  multimodal_evidence: string;
+  pass: boolean;
+}
+
 export interface SessionSynthesis {
+  value_leak_identified?: string;
+  rubric_evaluations?: RubricEvaluationItem[];
+  final_score?: number;
+  median_score?: number;
+  ensemble_scores?: number[];
+  passed?: boolean;
   audit: {
     scores: Record<string, number>;
     primary_weakness: string;
     rationale: string;
   };
-  mentor_prompt: {
+  mentor_prompt_m1?: {
     system_instruction: string;
     highlights: Array<{
       type: string;
@@ -16,7 +29,20 @@ export interface SessionSynthesis {
       turn_id?: string;
     }>;
   };
-  next_partner_prompt: {
+  partner_prompt_p1?: {
+    system_instruction: string;
+    focus_area?: string;
+  };
+  mentor_prompt?: {
+    system_instruction: string;
+    highlights: Array<{
+      type: string;
+      reason: string;
+      timestamp?: string;
+      turn_id?: string;
+    }>;
+  };
+  next_partner_prompt?: {
     system_instruction: string;
     focus_area?: string;
   };

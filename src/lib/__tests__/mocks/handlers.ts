@@ -74,12 +74,31 @@ export const handlers = [
             parts: [
               {
                 text: JSON.stringify({
+                  value_leak_identified: 'Nervous posture under pressure',
+                  rubric_evaluations: [
+                    {
+                      criterion: 'Maintains steady eye contact during introduction',
+                      timestamp_reference: '00:05',
+                      multimodal_evidence: 'Direct eye contact logged',
+                      pass: true,
+                    },
+                    {
+                      criterion: 'Demonstrates confident vocal timbre without hesitations',
+                      timestamp_reference: '00:12',
+                      multimodal_evidence: 'Smooth vocal delivery',
+                      pass: true,
+                    },
+                  ],
+                  final_score: 90,
+                  passed: true,
                   audit: {
                     scores: { EQ: 8, IQ: 7, Wealth: 9, Physique: 8 },
                     primary_weakness: 'Nervous posture under pressure',
                     rationale: 'Client maintained solid vocal tone but exhibited subtle physical stiffness.',
                   },
                   master_log: '# Master Performance Log\nTimestamped transcript aligned.',
+                  mentor_prompt_m1: { system_instruction: 'You are M1, executive mentor.', highlights: [] },
+                  partner_prompt_p1: { system_instruction: 'You are P1, standoffish partner.', focus_area: 'EQ' },
                   mentor_prompt: { system_instruction: 'You are M1, executive mentor.' },
                   next_partner_prompt: { system_instruction: 'You are P1, standoffish partner.' },
                 }),

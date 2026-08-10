@@ -2,6 +2,7 @@ import React, { RefObject } from 'react';
 import { SessionInsight } from '@/lib/insightStore';
 import { SessionSynthesis } from '@/hooks/useSessionInsights';
 import { MentorChatContainer } from './MentorChatContainer';
+import { SKILL_TREE_CURRICULUM } from '@/lib/skillTree';
 
 interface NotesTabProps {
   insights: SessionInsight[];
@@ -122,6 +123,48 @@ export function NotesTab({
             <div className="placeholder" style={{ fontSize: '0.8rem' }}>Coach is synthesizing performance...</div>
           ) : synthesis ? (
             <div className="notes-container" style={{ gap: '12px' }}>
+              {synthesis.user_progress_state && (
+                <div className="notes-section" style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  <div className="notes-section-title" style={{ fontSize: '0.75rem', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Persistent Skill Tree Ladder</span>
+                    <span style={{ color: 'var(--pastel-blue-text)', fontWeight: 700 }}>
+                      Active: {synthesis.user_progress_state.active_tier_name}
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', textAlign: 'center' }}>
+                    {[1, 2, 3, 4, 5].map((lvl) => {
+                      const tierObj = SKILL_TREE_CURRICULUM[lvl];
+                      const hist = synthesis.user_progress_state?.tier_history?.[`tier_${lvl}`];
+                      const isUnlocked = synthesis.user_progress_state?.unlocked_tiers?.includes(lvl);
+                      const isActive = synthesis.user_progress_state?.active_tier === lvl;
+                      const isPassed = hist?.passed;
+
+                      return (
+                        <div 
+                          key={lvl} 
+                          style={{
+                            padding: '6px 4px',
+                            borderRadius: '6px',
+                            border: isActive ? '2px solid var(--pastel-blue-text)' : '1px solid var(--border)',
+                            background: isPassed ? 'rgba(0,200,100,0.08)' : isActive ? 'rgba(0,100,255,0.08)' : isUnlocked ? '#ffffff' : 'rgba(0,0,0,0.03)',
+                            fontSize: '0.7rem',
+                            opacity: isUnlocked ? 1 : 0.4
+                          }}
+                        >
+                          <div style={{ fontWeight: 700 }}>T{lvl}</div>
+                          <div style={{ fontSize: '0.65rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {tierObj.focusPillar}
+                          </div>
+                          <div style={{ fontSize: '0.6rem', marginTop: '2px', fontWeight: 600 }}>
+                            {isPassed ? '✓ PASS' : isActive ? '● ACTIVE' : isUnlocked ? 'UNLOCKED' : '🔒 LOCKED'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="insight-card" style={{ background: '#ffffff', border: 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <div className={`badge ${synthesis.passed ? 'badge-green' : 'badge-red'}`} style={{ fontSize: '0.85rem', padding: '6px 12px', fontWeight: 700 }}>

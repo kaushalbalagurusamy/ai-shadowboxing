@@ -4,6 +4,11 @@ import { geminiModel } from '@/lib/gemini';
 import { SchemaType } from '@google/generative-ai';
 import { conversationIdSchema } from '@/lib/schemas';
 import { fetchAndIngestTavusConversation } from '@/lib/tavusSync';
+import { 
+  getTierDefinition, 
+  getDefaultUserProgressState, 
+  UserProgressState 
+} from '@/lib/skillTree';
 
 const coachSchema = {
   type: SchemaType.OBJECT,
@@ -93,6 +98,12 @@ export async function executeSynthesis(conversationId: string) {
     throw new Error("No data found for this session after Tavus API sync.");
   }
 
+  // Load current user progress state (or default to Tier 1)
+  const existingProgress: UserProgressState = 
+    (await insightStore.getMetadata(conversationId, 'user_progress_state')) || getDefaultUserProgressState();
+  const currentTierLevel = existingProgress.active_tier || 1;
+  const currentTierDef = getTierDefinition(currentTierLevel);
+
   // --- PASS 1: THE ZIPPER (Context Distillation) ---
   const transcript = insights.filter(i => i.type === 'transcript_turn');
   const toolCalls = insights.filter(i => i.type === 'behavioral_cue');
@@ -129,15 +140,23 @@ export async function executeSynthesis(conversationId: string) {
   // Store distilled log
   await insightStore.setMetadata(conversationId, 'master_performance_log', masterLog);
 
-  // --- PASS 2: DETERMINISTIC MAJ@3 PARALLEL ENSEMBLE ---
+  // --- PASS 2: CURRICULUM-BOUND MAJ@3 ENSEMBLE ---
   const coachPrompt = `
-    You are the "Head Coach & Progression Evaluator" of the AI Shadowboxing simulator. You perform forensic audits of user social dynamics against strict high-value rubrics (EQ, IQ, Wealth, Physique).
+    You are the "Head Coach & Skill Tree Evaluator" of the AI Shadowboxing simulator. You perform forensic audits of user social dynamics against an explicit 5-Tier Curriculum Ladder.
+
+    ### ACTIVE SKILL TREE TIER:
+    Level ${currentTierDef.level}: ${currentTierDef.name}
+    Pillar Focus: ${currentTierDef.focusPillar}
+    Description: ${currentTierDef.description}
+
+    TARGET TIER 10-ITEM RUBRIC CRITERIA:
+    ${JSON.stringify(currentTierDef.targetRubricItems, null, 2)}
 
     ### INPUT DATA:
     1. THE MASTER PERFORMANCE LOG:
     ${masterLog}
 
-    2. KNOWLEDGE BASE & RUBRICS:
+    2. KNOWLEDGE BASE & ADDITIONAL RUBRICS:
     ${knowledgeBase || "Default rubrics: EQ, IQ, Wealth, Physique."}
 
     ---
@@ -145,11 +164,11 @@ export async function executeSynthesis(conversationId: string) {
     ### INSTRUCTIONS & EVALUATION STEPS:
 
     1. VALUE LEAK AUDIT:
-       - Identify the user's "Single Greatest Weakness" (the \`value_leak_identified\`) that caused the date to lose interest. Populate \`audit.primary_weakness\` and \`audit.rationale\`.
+       - Identify the user's "Single Greatest Weakness" (the \`value_leak_identified\`) relative to the active tier (${currentTierDef.name}). Populate \`audit.primary_weakness\` and \`audit.rationale\`.
        - Assign 1-10 scores for EQ, IQ, Wealth, and Physique in \`audit.scores\`.
 
     2. CHAIN-OF-THOUGHT RUBRIC EVALUATION (10 Localized Criteria):
-       - Generate an array of EXACTLY 10 binary criteria (Yes/No) specifically tailored to stress-test the \`value_leak_identified\`.
+       - Generate an array of EXACTLY 10 binary criteria (Yes/No) strictly anchored to the active tier targets (${currentTierDef.name}).
        - For each item, populate \`criterion\`, \`timestamp_reference\`, and \`multimodal_evidence\` (citing exact Raven cues or transcript lines) BEFORE outputting the boolean \`pass\`.
 
     3. DETERMINISTIC SCORE & 90% GATEWAY:
@@ -160,15 +179,14 @@ export async function executeSynthesis(conversationId: string) {
        - Shell: "You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable."
        - Length Constraint: STRICT MAXIMUM OF 75 WORDS (MUST be deliverable aloud in under 30 seconds).
        - Instructions:
-         - Affirm 1-2 high-value moments.
-         - Surgically deconstruct \`value_leak_identified\` and provide 1 practical fix for their next session.
+         - If passed (>=90): Commend Tier ${currentTierLevel} graduation and introduce Tier ${Math.min(5, currentTierLevel + 1)} expectations.
+         - If failed (<90): Deconstruct the specific Tier ${currentTierLevel} Value Leak blocking the 90% gate and give 1 practical fix for the retry.
          - Reference specific timestamps or Turn IDs from the log.
-         - Conclude by opening the floor for client questions.
 
     5. NEXT PARTNER PROMPT GENERATION (P1):
-       - Shell: "You are a very attractive mid 20s woman (working a 500k corporate lawyer job in NYC) on a first date in a coffee shop."
-       - If passed (>=90): Generate Level P(n+1) system prompt introducing higher difficulty dynamics (~150-200 words).
-       - If failed (<90): Generate Level P(n) retry prompt that naturally stress-tests the specific \`value_leak_identified\` (~150-200 words).
+       - Base Partner Shell: "${currentTierDef.partnerBasePrompt}"
+       - If passed (>=90): Generate Level P(n+1) system prompt advancing to Tier ${Math.min(5, currentTierLevel + 1)} partner dynamics (~150-200 words).
+       - If failed (<90): Generate Level P(n) retry prompt that naturally stress-tests the specific Tier ${currentTierLevel} \`value_leak_identified\` (~150-200 words).
   `;
 
   // Helper for single thread evaluation with 1 auto-retry
@@ -203,11 +221,40 @@ export async function executeSynthesis(conversationId: string) {
   const medianScore = medianRun.final_score ?? 0;
   const isPassed = medianScore >= 90;
 
+  // Persistent Skill Tree Ladder State Transition
+  const updatedProgress: UserProgressState = JSON.parse(JSON.stringify(existingProgress));
+  const currentKey = `tier_${currentTierLevel}`;
+  const currentRecord = updatedProgress.tier_history[currentKey] || { status: 'IN_PROGRESS', best_score: 0, attempts: 0, passed: false };
+  currentRecord.attempts = (currentRecord.attempts || 0) + 1;
+  currentRecord.best_score = Math.max(currentRecord.best_score || 0, medianScore);
+
+  if (isPassed) {
+    currentRecord.passed = true;
+    currentRecord.status = 'PASSED';
+    const nextTierLevel = Math.min(5, currentTierLevel + 1);
+    if (!updatedProgress.unlocked_tiers.includes(nextTierLevel)) {
+      updatedProgress.unlocked_tiers.push(nextTierLevel);
+    }
+    updatedProgress.active_tier = nextTierLevel;
+    updatedProgress.active_tier_name = getTierDefinition(nextTierLevel).name;
+    const nextKey = `tier_${nextTierLevel}`;
+    if (!updatedProgress.tier_history[nextKey] || updatedProgress.tier_history[nextKey].status === 'LOCKED') {
+      updatedProgress.tier_history[nextKey] = { status: 'IN_PROGRESS', best_score: 0, attempts: 0, passed: false };
+    }
+  } else {
+    currentRecord.status = 'IN_PROGRESS';
+  }
+  updatedProgress.tier_history[currentKey] = currentRecord;
+
+  // Persist skill tree progress state to Supabase
+  await insightStore.setMetadata(conversationId, 'user_progress_state', updatedProgress);
+
   const synthesisResult = {
     ...medianRun,
     median_score: medianScore,
     ensemble_scores: ensembleScores,
     passed: isPassed,
+    user_progress_state: updatedProgress,
     // Backwards compatibility aliases
     mentor_prompt: medianRun.mentor_prompt_m1,
     next_partner_prompt: medianRun.partner_prompt_p1,

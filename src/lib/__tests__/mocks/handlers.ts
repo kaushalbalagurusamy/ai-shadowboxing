@@ -101,6 +101,14 @@ export const handlers = [
                   partner_prompt_p1: { system_instruction: 'You are P1, standoffish partner.', focus_area: 'EQ' },
                   mentor_prompt: { system_instruction: 'You are M1, executive mentor.' },
                   next_partner_prompt: { system_instruction: 'You are P1, standoffish partner.' },
+                  user_progress_state: {
+                    active_tier: 1,
+                    active_tier_name: 'Tier 1: Physical Presence & Composure',
+                    unlocked_tiers: [1],
+                    tier_history: {
+                      tier_1: { status: 'IN_PROGRESS', best_score: 90, attempts: 1, passed: true },
+                    },
+                  },
                 }),
               },
             ],

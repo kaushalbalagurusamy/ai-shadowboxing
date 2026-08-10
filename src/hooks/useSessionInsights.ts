@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { insightStore, SessionInsight } from '@/lib/insightStore';
+import { UserProgressState } from '@/lib/skillTree';
 
 export interface RubricEvaluationItem {
   criterion: string;
@@ -15,6 +16,7 @@ export interface SessionSynthesis {
   median_score?: number;
   ensemble_scores?: number[];
   passed?: boolean;
+  user_progress_state?: UserProgressState;
   audit: {
     scores: Record<string, number>;
     primary_weakness: string;

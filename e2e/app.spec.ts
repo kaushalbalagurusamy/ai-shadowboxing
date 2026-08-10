@@ -36,7 +36,7 @@ test.describe('AI Shadowboxing Full-Stack E2E Browser Journey', () => {
 
     const promptTextarea = page.locator('#personaPrompt');
     await expect(promptTextarea).toBeVisible();
-    await expect(promptTextarea).toContainText('first date at a coffee shop');
+    await expect(promptTextarea).toContainText('first date in a coffee shop');
   });
 
   test('should display action buttons and input containers', async ({ page }) => {

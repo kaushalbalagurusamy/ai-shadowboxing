@@ -47,7 +47,7 @@ describe('MentorTab React Component Unit Tests', () => {
 
   it('should render disabled Learn button when synthesis prop is null', () => {
     render(<MentorTab {...defaultProps} synthesis={null} />);
-    const chatBtn = screen.getByRole('button', { name: /Learn \(Requires Completed Date\)/i });
+    const chatBtn = screen.getByRole('button', { name: /^Learn$/i });
     expect(chatBtn).toBeDefined();
     expect((chatBtn as HTMLButtonElement).disabled).toBe(true);
 

@@ -87,16 +87,13 @@ export function MentorTab({
             </div>
           ) : (
             <div>
-              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '12px' }}>
-                Mentor feedback pending. Complete a Date session to generate personalized debrief instructions.
-              </div>
               <button 
                 className="btn btn-primary" 
                 onClick={handleLearnClick} 
                 style={{ width: '100%', opacity: 0.5, cursor: 'not-allowed' }}
                 disabled={true}
               >
-                Learn (Requires Completed Date)
+                Learn
               </button>
             </div>
           )}

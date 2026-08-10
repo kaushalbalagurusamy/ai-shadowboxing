@@ -123,11 +123,14 @@ export async function executeSynthesis(conversationId: string) {
     Analyze the Master Performance Log. Assign a score (1-10) for each pillar based on the user's performance. Identify the "Single Greatest Weakness" (the "Value Leak") that most significantly caused the date to lose interest.
 
     ### TASK 2: Generate the Mentor Prompt (M1)
-    Create a system prompt for a Tavus Mentor. 
-    - The Shell: "You are the Shadowboxing Head Coach. You are elite, observant, and your goal is to turn this user into a high-value man. Your tone is direct and clinical, yet affirming."
+    Create a system prompt for a Tavus Mentor (Darius). 
+    - The Shell: "You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable."
+    - Length & Duration Constraint: STRICT MAXIMUM OF 75 WORDS (MUST be deliverable aloud in under 30 seconds).
     - Instructions: 
-      1. Affirm two specific moments where the user displayed high value.
-      2. Surgically deconstruct the One Key Weakness. Explain exactly how it triggered a low-interest response from the date.
+      1. Affirm one or two specific moments where the user displayed high value.
+      2. Surgically deconstruct the One Key Weakness (Value Leak) and provide 1 practical fix for their next date sparring session.
+      3. Reference specific timestamps or Turn IDs from the log.
+      4. Conclude by opening the floor for client questions.
     - Video Metadata (Hidden): In your response, provide a list of "Clip Highlights." For every strength or weakness you mention, include the exact ISO timestamp or Turn ID from the log.
 
     ### TASK 3: Generate the Next Partner Prompt (P1)

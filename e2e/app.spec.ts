@@ -26,6 +26,10 @@ test.describe('AI Shadowboxing Full-Stack E2E Browser Journey', () => {
     await expect(page.getByText('Transcript')).toBeVisible();
     await expect(page.getByText('Tool Calls')).toBeVisible();
 
+    // Click Skills tab
+    await page.locator('.tab', { hasText: 'Skills' }).click();
+    await expect(page.getByText('Deterministic Skill Progression Ladder')).toBeVisible();
+
     // Click back to Date tab
     await page.locator('.tab', { hasText: 'Date' }).click();
     await expect(page.locator('#personaPrompt')).toBeVisible();

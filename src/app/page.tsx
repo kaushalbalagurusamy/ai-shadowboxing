@@ -5,6 +5,7 @@ import { CANONICAL_PARTNER_FACE_ID, CANONICAL_MENTOR_FACE_ID } from "@/lib/const
 import { DateTab } from "@/components/DateTab";
 import { MentorTab } from "@/components/MentorTab";
 import { NotesTab } from "@/components/NotesTab";
+import { SkillsTab } from "@/components/SkillsTab";
 import { MediaStreamContainer } from "@/components/MediaStreamContainer";
 import { useTavusSession } from "@/hooks/useTavusSession";
 import { useSessionInsights } from "@/hooks/useSessionInsights";
@@ -108,6 +109,12 @@ export default function Home() {
           >
             Notes
           </div>
+          <div 
+            className={`tab ${activeTab === 'Skills' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('Skills')}
+          >
+            Skills
+          </div>
         </div>
 
         {activeTab === 'Date' && (
@@ -150,6 +157,10 @@ export default function Home() {
             onApplyNextPartnerPrompt={handleApplyNextPartnerPrompt}
             conversationId={conversationId}
           />
+        )}
+
+        {activeTab === 'Skills' && (
+          <SkillsTab synthesis={synthesis} />
         )}
       </div>
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { startSessionSchema, tavusPalResponseSchema } from '@/lib/schemas';
 import { personaStore } from '@/lib/personaStore';
+import { CANONICAL_MENTOR_FACE_ID, DATE_MAX_CALL_DURATION, MENTOR_MAX_CALL_DURATION } from '@/lib/constants';
 
 // In-memory persona/PAL cache mapping SHA-256 config hash to Tavus pal_id
 const personaCache = new Map<string, string>();
@@ -127,6 +128,9 @@ export async function POST(req: Request) {
       await personaStore.setCachedPalId(configHash, palId);
     }
 
+    const isMentor = replicaId === CANONICAL_MENTOR_FACE_ID;
+    const maxCallDuration = isMentor ? MENTOR_MAX_CALL_DURATION : DATE_MAX_CALL_DURATION;
+
     // Attempt conversation creation with pal_id
     let conversationRes = await fetch("https://tavusapi.com/v2/conversations", {
       method: "POST",
@@ -137,10 +141,10 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         replica_id: replicaId || "r291e545fd67",
         pal_id: palId,
-        conversation_name: "Phase 1 Demo Session",
+        conversation_name: isMentor ? "Shadowboxing Mentor Session" : "Shadowboxing Date Session",
         callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`,
         properties: {
-          max_call_duration: 600, // 10 minute cap
+          max_call_duration: maxCallDuration, // 2-min cap for Date, 1-min cap for Mentor
           participant_left_timeout: 10, // kill if user drops
           participant_absent_timeout: 30 // kill if never joined
         }
@@ -165,10 +169,10 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           replica_id: replicaId || "r291e545fd67",
           pal_id: palId,
-          conversation_name: "Phase 1 Demo Session",
+          conversation_name: isMentor ? "Shadowboxing Mentor Session" : "Shadowboxing Date Session",
           callback_url: `${new URL(req.url).origin}/api/webhooks/tavus`,
           properties: {
-            max_call_duration: 600,
+            max_call_duration: maxCallDuration,
             participant_left_timeout: 10,
             participant_absent_timeout: 30
           }

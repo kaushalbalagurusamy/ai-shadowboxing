@@ -114,7 +114,7 @@ async function testFullRoutePayload() {
       conversation_name: "Phase 1 Demo Session",
       callback_url: "https://ai-shadowboxing.vercel.app/api/webhooks/tavus",
       properties: {
-        max_call_duration: 600,
+        max_call_duration: 120,
         participant_left_timeout: 10,
         participant_absent_timeout: 30
       }

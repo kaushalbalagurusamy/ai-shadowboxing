@@ -75,19 +75,18 @@ export function SkillsTab({ synthesis }: SkillsTabProps) {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>
                     {hist && hist.attempts > 0 ? (
                       <>Best: <strong>{hist.best_score}/100</strong> ({hist.attempts} attempt{hist.attempts === 1 ? '' : 's'})</>
                     ) : (
                       <>Baseline: <strong>{hist?.best_score || 0}/100</strong></>
                     )}
                   </span>
-                  <div 
-                    className={`badge ${isPassed ? 'badge-green' : isActive ? 'badge-blue' : isUnlocked ? 'badge-blue' : 'badge-blue'}`} 
-                    style={{ fontWeight: 700, opacity: isUnlocked ? 1 : 0.6 }}
-                  >
-                    {isPassed ? '✓ PASSED' : isActive ? '● ACTIVE IN PROGRESS' : isUnlocked ? 'UNLOCKED' : 'LOCKED'}
-                  </div>
+                  {isPassed && (
+                    <div className="badge badge-green" style={{ fontWeight: 700 }}>
+                      ✓ PASSED
+                    </div>
+                  )}
                 </div>
               </div>
 

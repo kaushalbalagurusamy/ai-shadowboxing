@@ -55,18 +55,18 @@ export function SkillsTab({ synthesis }: SkillsTabProps) {
             <div
               key={lvl}
               style={{
-                background: isPassed ? 'rgba(0,200,100,0.03)' : isActive ? '#ffffff' : isUnlocked ? '#ffffff' : 'rgba(245,245,248,0.7)',
+                background: isPassed ? 'rgba(0,200,100,0.03)' : isActive ? '#ffffff' : isUnlocked ? '#ffffff' : 'rgba(0,0,0,0.02)',
                 border: isActive ? '2px solid var(--pastel-blue-text)' : '1px solid var(--border)',
                 borderRadius: '10px',
                 padding: '16px',
-                opacity: 1,
+                opacity: isUnlocked ? 1 : 0.65,
                 boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
                 position: 'relative',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div className="badge badge-blue" style={{ fontWeight: 700, fontSize: '0.8rem' }}>
+                  <div className="badge badge-blue" style={{ fontWeight: 700, fontSize: '0.8rem', opacity: isUnlocked ? 1 : 0.7 }}>
                     Level {lvl}
                   </div>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
@@ -83,10 +83,10 @@ export function SkillsTab({ synthesis }: SkillsTabProps) {
                     )}
                   </span>
                   <div 
-                    className={`badge ${isPassed ? 'badge-green' : isActive ? 'badge-blue' : isUnlocked ? 'badge-blue' : 'badge-red'}`} 
-                    style={{ fontWeight: 700 }}
+                    className={`badge ${isPassed ? 'badge-green' : isActive ? 'badge-blue' : isUnlocked ? 'badge-blue' : 'badge-blue'}`} 
+                    style={{ fontWeight: 700, opacity: isUnlocked ? 1 : 0.6 }}
                   >
-                    {isPassed ? '✓ PASSED' : isActive ? '● ACTIVE IN PROGRESS' : isUnlocked ? 'UNLOCKED' : '🔒 LOCKED (Monitored)'}
+                    {isPassed ? '✓ PASSED' : isActive ? '● ACTIVE IN PROGRESS' : isUnlocked ? 'UNLOCKED' : 'LOCKED'}
                   </div>
                 </div>
               </div>

@@ -22,6 +22,7 @@ export interface SessionSynthesis {
     primary_weakness: string;
     rationale: string;
   };
+  recordingUrl?: string | null;
   mentor_prompt_m1?: {
     system_instruction: string;
     highlights: Array<{
@@ -29,6 +30,12 @@ export interface SessionSynthesis {
       reason: string;
       timestamp?: string;
       turn_id?: string;
+    }>;
+    clips?: Array<{
+      speech_offset_seconds: number;
+      clip_start_time: number;
+      clip_end_time: number;
+      label: string;
     }>;
   };
   partner_prompt_p1?: {

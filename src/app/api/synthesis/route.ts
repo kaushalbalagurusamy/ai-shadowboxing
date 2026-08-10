@@ -64,8 +64,21 @@ const coachSchema = {
             required: ["type", "reason"],
           },
         },
+        clips: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              speech_offset_seconds: { type: SchemaType.NUMBER },
+              clip_start_time: { type: SchemaType.NUMBER },
+              clip_end_time: { type: SchemaType.NUMBER },
+              label: { type: SchemaType.STRING },
+            },
+            required: ["speech_offset_seconds", "clip_start_time", "clip_end_time", "label"],
+          },
+        },
       },
-      required: ["system_instruction", "highlights"],
+      required: ["system_instruction", "highlights", "clips"],
     },
     partner_prompt_p1: {
       type: SchemaType.OBJECT,
@@ -187,13 +200,18 @@ export async function executeSynthesis(conversationId: string) {
        - Calculate \`final_score\` strictly as (number of true \`pass\` values * 10).
        - Set \`passed = true\` IF AND ONLY IF \`final_score >= 90\`. Otherwise \`passed = false\`.
 
-    4. MENTOR PROMPT GENERATION (M1):
+    4. MENTOR PROMPT & SYNCHRONIZED CLIPS GENERATION (M1):
        - Shell: "You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable."
        - Length Constraint: STRICT MAXIMUM OF 75 WORDS (MUST be deliverable aloud in under 30 seconds).
        - Instructions:
          - If passed (>=90): Commend Tier ${currentTierLevel} graduation and introduce Tier ${Math.min(5, currentTierLevel + 1)} expectations.
          - If failed (<90): Deconstruct the specific Tier ${currentTierLevel} Value Leak blocking the 90% gate and give 1 practical fix for the retry.
          - Reference specific timestamps or Turn IDs from the log.
+       - Structured Video Clips: Map 1-2 key timestamp references from the session log to speech offsets in your debrief into \`clips\` so the main stage video player auto-plays the recorded session clip synchronized with your speech:
+         - \`speech_offset_seconds\`: e.g. 5.0 (number of seconds into your speech when you mention the moment)
+         - \`clip_start_time\`: e.g. 12.5 (start second in session video)
+         - \`clip_end_time\`: e.g. 18.0 (end second in session video)
+         - \`label\`: e.g. "Posture Breakdown" (short 2-4 word description)
 
     5. NEXT PARTNER PROMPT GENERATION (P1):
        - Base Partner Shell: "${currentTierDef.partnerBasePrompt}"

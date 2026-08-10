@@ -32,7 +32,8 @@ async function createTavusPal(apiKey: string, combinedPrompt: string, defaultFac
         },
         conversational_flow: {
           turn_detection_model: "sparrow-1",
-          pal_interruptibility: "low"
+          pal_interruptibility: defaultFaceId === CANONICAL_MENTOR_FACE_ID ? "none" : "low",
+          user_speech_detection: defaultFaceId !== CANONICAL_MENTOR_FACE_ID,
         },
         llm: {
           tools: [

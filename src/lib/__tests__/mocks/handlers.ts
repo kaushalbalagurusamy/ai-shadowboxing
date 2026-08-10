@@ -97,7 +97,13 @@ export const handlers = [
                     rationale: 'Client maintained solid vocal tone but exhibited subtle physical stiffness.',
                   },
                   master_log: '# Master Performance Log\nTimestamped transcript aligned.',
-                  mentor_prompt_m1: { system_instruction: 'You are M1, executive mentor.', highlights: [] },
+                  mentor_prompt_m1: { 
+                    system_instruction: 'You are M1, executive mentor.', 
+                    highlights: [],
+                    clips: [
+                      { speech_offset_seconds: 5, clip_start_time: 12.5, clip_end_time: 18.0, label: 'Posture Breakdown' }
+                    ] 
+                  },
                   partner_prompt_p1: { system_instruction: 'You are P1, standoffish partner.', focus_area: 'EQ' },
                   mentor_prompt: { system_instruction: 'You are M1, executive mentor.' },
                   next_partner_prompt: { system_instruction: 'You are P1, standoffish partner.' },

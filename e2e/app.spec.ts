@@ -9,16 +9,16 @@ test.describe('AI Shadowboxing Full-Stack E2E Browser Journey', () => {
     await expect(page.locator('h1')).toContainText('AI Shadowboxing');
 
     // Check navigation tabs (.tab divs)
-    await expect(page.locator('.tab', { hasText: 'Date' })).toBeVisible();
-    await expect(page.locator('.tab', { hasText: 'Mentor' })).toBeVisible();
+    await expect(page.locator('.tab', { hasText: 'Practice' })).toBeVisible();
+    await expect(page.locator('.tab', { hasText: 'Learn' })).toBeVisible();
     await expect(page.locator('.tab', { hasText: 'Notes' })).toBeVisible();
   });
 
   test('should switch tabs seamlessly', async ({ page }) => {
     await page.goto('/');
 
-    // Click Mentor tab
-    await page.locator('.tab', { hasText: 'Mentor' }).click();
+    // Click Learn tab
+    await page.locator('.tab', { hasText: 'Learn' }).click();
     await expect(page.locator('#mentorPrompt')).toBeVisible();
 
     // Click Notes tab
@@ -30,8 +30,8 @@ test.describe('AI Shadowboxing Full-Stack E2E Browser Journey', () => {
     await page.locator('.tab', { hasText: 'Skills' }).click();
     await expect(page.getByText('Deterministic Skill Progression Ladder')).toBeVisible();
 
-    // Click back to Date tab
-    await page.locator('.tab', { hasText: 'Date' }).click();
+    // Click back to Practice tab
+    await page.locator('.tab', { hasText: 'Practice' }).click();
     await expect(page.locator('#personaPrompt')).toBeVisible();
   });
 
@@ -46,7 +46,7 @@ test.describe('AI Shadowboxing Full-Stack E2E Browser Journey', () => {
   test('should display action buttons and input containers', async ({ page }) => {
     await page.goto('/');
 
-    const dateBtn = page.getByRole('button', { name: /^Date$/i });
-    await expect(dateBtn).toBeVisible();
+    const practiceBtn = page.getByRole('button', { name: /^Practice$/i });
+    await expect(practiceBtn).toBeVisible();
   });
 });

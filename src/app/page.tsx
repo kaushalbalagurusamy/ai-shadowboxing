@@ -69,17 +69,17 @@ export default function Home() {
   }, [insights]);
 
   const handleStartSession = (prompt: string, kb: string, label: string) => {
-    if (label === 'Date') {
+    if (label === 'Practice' || label === 'Date') {
       setConversationId(null);
       setConversationUrl(null);
     }
-    const currentReplicaId = label === 'Date' ? CANONICAL_PARTNER_FACE_ID : CANONICAL_MENTOR_FACE_ID;
+    const currentReplicaId = (label === 'Practice' || label === 'Date') ? CANONICAL_PARTNER_FACE_ID : CANONICAL_MENTOR_FACE_ID;
     startSession(prompt, kb, label, currentReplicaId);
   };
 
   const handleApplyNextPartnerPrompt = (nextPrompt: string) => {
     setSystemPrompt(nextPrompt);
-    setActiveTab('Date');
+    setActiveTab('Practice');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -92,16 +92,16 @@ export default function Home() {
 
         <div className="tabs">
           <div 
-            className={`tab ${activeTab === 'Date' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('Date')}
+            className={`tab ${activeTab === 'Practice' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('Practice')}
           >
-            Date
+            Practice
           </div>
           <div 
-            className={`tab ${activeTab === 'Mentor' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('Mentor')}
+            className={`tab ${activeTab === 'Learn' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('Learn')}
           >
-            Mentor
+            Learn
           </div>
           <div 
             className={`tab ${activeTab === 'Notes' ? 'active' : ''}`} 
@@ -117,7 +117,7 @@ export default function Home() {
           </div>
         </div>
 
-        {activeTab === 'Date' && (
+        {activeTab === 'Practice' && (
           <DateTab
             systemPrompt={systemPrompt}
             setSystemPrompt={setSystemPrompt}
@@ -130,7 +130,7 @@ export default function Home() {
           />
         )}
 
-        {activeTab === 'Mentor' && (
+        {activeTab === 'Learn' && (
           <MentorTab
             mentorPrompt={mentorPrompt}
             setMentorPrompt={setMentorPrompt}

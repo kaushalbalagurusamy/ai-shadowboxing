@@ -20,7 +20,7 @@ describe('DateTab React Component Unit Tests', () => {
 
     expect(screen.getByDisplayValue('Initial prompt text')).toBeDefined();
     expect(screen.getByDisplayValue('Initial knowledge base text')).toBeDefined();
-    expect(screen.getByRole('button', { name: /Date/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Practice/i })).toBeDefined();
   });
 
   it('should render error message banner when error prop is provided', () => {
@@ -36,9 +36,9 @@ describe('DateTab React Component Unit Tests', () => {
     expect(defaultProps.setSystemPrompt).toHaveBeenCalledWith('Updated prompt text');
   });
 
-  it('should trigger onStartSession callback when Date button is clicked', () => {
+  it('should trigger onStartSession callback when Practice button is clicked', () => {
     render(<DateTab {...defaultProps} />);
-    const startBtn = screen.getByRole('button', { name: /Date/i });
+    const startBtn = screen.getByRole('button', { name: /Practice/i });
 
     fireEvent.click(startBtn);
     expect(defaultProps.onStartSession).toHaveBeenCalledTimes(1);

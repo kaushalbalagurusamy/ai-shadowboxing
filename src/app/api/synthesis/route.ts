@@ -75,6 +75,17 @@ const coachSchema = {
       },
       required: ["system_instruction", "focus_area"],
     },
+    tier_baselines: {
+      type: SchemaType.OBJECT,
+      properties: {
+        tier_1: { type: SchemaType.INTEGER },
+        tier_2: { type: SchemaType.INTEGER },
+        tier_3: { type: SchemaType.INTEGER },
+        tier_4: { type: SchemaType.INTEGER },
+        tier_5: { type: SchemaType.INTEGER },
+      },
+      required: ["tier_1", "tier_2", "tier_3", "tier_4", "tier_5"],
+    },
   },
   required: [
     "value_leak_identified",
@@ -84,6 +95,7 @@ const coachSchema = {
     "audit",
     "mentor_prompt_m1",
     "partner_prompt_p1",
+    "tier_baselines",
   ],
 };
 
@@ -187,6 +199,9 @@ export async function executeSynthesis(conversationId: string) {
        - Base Partner Shell: "${currentTierDef.partnerBasePrompt}"
        - If passed (>=90): Generate Level P(n+1) system prompt advancing to Tier ${Math.min(5, currentTierLevel + 1)} partner dynamics (~150-200 words).
        - If failed (<90): Generate Level P(n) retry prompt that naturally stress-tests the specific Tier ${currentTierLevel} \`value_leak_identified\` (~150-200 words).
+
+    6. MULTI-TIER BACKGROUND BASELINES:
+       - Evaluate an estimated performance score (0 to 100) for ALL 5 Tiers simultaneously in \`tier_baselines\` (\`tier_1\`, \`tier_2\`, \`tier_3\`, \`tier_4\`, \`tier_5\`) based on observed cues across the entire date.
   `;
 
   // Helper for single thread evaluation with 1 auto-retry
@@ -223,6 +238,25 @@ export async function executeSynthesis(conversationId: string) {
 
   // Persistent Skill Tree Ladder State Transition
   const updatedProgress: UserProgressState = JSON.parse(JSON.stringify(existingProgress));
+
+  // Multi-tier background baseline updates across all 5 tiers
+  if (medianRun.tier_baselines) {
+    [1, 2, 3, 4, 5].forEach((lvl) => {
+      const k = `tier_${lvl}`;
+      const baseScore = Number(medianRun.tier_baselines[k] || 0);
+      if (!updatedProgress.tier_history[k]) {
+        updatedProgress.tier_history[k] = {
+          status: updatedProgress.unlocked_tiers.includes(lvl) ? (lvl === updatedProgress.active_tier ? 'IN_PROGRESS' : 'UNLOCKED') : 'LOCKED',
+          best_score: baseScore,
+          attempts: 0,
+          passed: false,
+        };
+      } else {
+        updatedProgress.tier_history[k].best_score = Math.max(updatedProgress.tier_history[k].best_score || 0, baseScore);
+      }
+    });
+  }
+
   const currentKey = `tier_${currentTierLevel}`;
   const currentRecord = updatedProgress.tier_history[currentKey] || { status: 'IN_PROGRESS', best_score: 0, attempts: 0, passed: false };
   currentRecord.attempts = (currentRecord.attempts || 0) + 1;
@@ -239,7 +273,12 @@ export async function executeSynthesis(conversationId: string) {
     updatedProgress.active_tier_name = getTierDefinition(nextTierLevel).name;
     const nextKey = `tier_${nextTierLevel}`;
     if (!updatedProgress.tier_history[nextKey] || updatedProgress.tier_history[nextKey].status === 'LOCKED') {
-      updatedProgress.tier_history[nextKey] = { status: 'IN_PROGRESS', best_score: 0, attempts: 0, passed: false };
+      updatedProgress.tier_history[nextKey] = {
+        status: 'IN_PROGRESS',
+        best_score: updatedProgress.tier_history[nextKey]?.best_score || 0,
+        attempts: 0,
+        passed: false,
+      };
     }
   } else {
     currentRecord.status = 'IN_PROGRESS';

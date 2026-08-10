@@ -55,11 +55,11 @@ export function SkillsTab({ synthesis }: SkillsTabProps) {
             <div
               key={lvl}
               style={{
-                background: isPassed ? 'rgba(0,200,100,0.03)' : isActive ? '#ffffff' : isUnlocked ? '#ffffff' : 'rgba(0,0,0,0.02)',
+                background: isPassed ? 'rgba(0,200,100,0.03)' : isActive ? '#ffffff' : isUnlocked ? '#ffffff' : 'rgba(245,245,248,0.7)',
                 border: isActive ? '2px solid var(--pastel-blue-text)' : '1px solid var(--border)',
                 borderRadius: '10px',
                 padding: '16px',
-                opacity: isUnlocked ? 1 : 0.5,
+                opacity: 1,
                 boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
                 position: 'relative',
               }}
@@ -75,16 +75,18 @@ export function SkillsTab({ synthesis }: SkillsTabProps) {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {hist && (
-                    <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                      Best: <strong>{hist.best_score}/100</strong> ({hist.attempts} attempt{hist.attempts === 1 ? '' : 's'})
-                    </span>
-                  )}
+                  <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                    {hist && hist.attempts > 0 ? (
+                      <>Best: <strong>{hist.best_score}/100</strong> ({hist.attempts} attempt{hist.attempts === 1 ? '' : 's'})</>
+                    ) : (
+                      <>Baseline: <strong>{hist?.best_score || 0}/100</strong></>
+                    )}
+                  </span>
                   <div 
                     className={`badge ${isPassed ? 'badge-green' : isActive ? 'badge-blue' : isUnlocked ? 'badge-blue' : 'badge-red'}`} 
                     style={{ fontWeight: 700 }}
                   >
-                    {isPassed ? '✓ PASSED' : isActive ? '● ACTIVE IN PROGRESS' : isUnlocked ? 'UNLOCKED' : '🔒 LOCKED'}
+                    {isPassed ? '✓ PASSED' : isActive ? '● ACTIVE IN PROGRESS' : isUnlocked ? 'UNLOCKED' : '🔒 LOCKED (Monitored)'}
                   </div>
                 </div>
               </div>

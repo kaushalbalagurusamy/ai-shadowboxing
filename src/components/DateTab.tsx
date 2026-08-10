@@ -59,7 +59,7 @@ export function DateTab({
           onClick={() => onStartSession(systemPrompt, knowledgeBase, 'Date')} 
           disabled={isLoading}
         >
-          {isLoading ? "Provisioning..." : "Date"}
+          {isLoading ? "Provisioning..." : "Practice"}
         </button>
       )}
     </>

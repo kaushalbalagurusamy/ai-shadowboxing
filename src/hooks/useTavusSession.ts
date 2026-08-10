@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 export function useTavusSession() {
-  const [activeTab, setActiveTab] = useState<"Date" | "Notes" | "Skills" | "Mentor">("Date");
+  const [activeTab, setActiveTab] = useState<"Practice" | "Notes" | "Skills" | "Learn">("Practice");
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

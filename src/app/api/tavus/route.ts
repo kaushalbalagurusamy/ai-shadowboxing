@@ -110,6 +110,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing TAVUS_API_KEY environment variable." }, { status: 500 });
     }
 
+    // L11 Defense: Mentor session requires non-empty synthesized systemPrompt
+    const isMentor = replicaId === CANONICAL_MENTOR_FACE_ID;
+    if (isMentor && (!systemPrompt || !systemPrompt.trim() || systemPrompt.includes("Select a date session"))) {
+      return NextResponse.json({ error: "Mentor session requires a completed date session synthesis." }, { status: 400 });
+    }
+
     const combinedPrompt = `${systemPrompt}\n\nKNOWLEDGE BASE (RUBRICS):\n${knowledgeBase}`;
     const configHash = crypto.createHash('sha256').update(combinedPrompt).digest('hex');
 
@@ -128,7 +134,6 @@ export async function POST(req: Request) {
       await personaStore.setCachedPalId(configHash, palId);
     }
 
-    const isMentor = replicaId === CANONICAL_MENTOR_FACE_ID;
     const maxCallDuration = isMentor ? MENTOR_MAX_CALL_DURATION : DATE_MAX_CALL_DURATION;
 
     // Attempt conversation creation with pal_id

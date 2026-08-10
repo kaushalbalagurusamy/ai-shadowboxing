@@ -26,6 +26,13 @@ export function MentorTab({
   synthesis,
   onStartSession,
 }: MentorTabProps) {
+  const isButtonEnabled = !!synthesis && !!mentorPrompt.trim() && !isLoading && !isSynthesizing;
+
+  const handleLearnClick = () => {
+    if (!isButtonEnabled) return;
+    onStartSession(mentorPrompt, mentorKnowledgeBase, 'Mentor');
+  };
+
   return (
     <>
       <div className="input-group">
@@ -34,7 +41,7 @@ export function MentorTab({
           id="mentorPrompt"
           value={mentorPrompt}
           onChange={(e) => setMentorPrompt(e.target.value)}
-          placeholder="The synthesized mentor instructions will appear here..."
+          placeholder="The synthesized mentor instructions will appear here post-date..."
           rows={10}
           disabled={!!conversationUrl}
         />
@@ -71,9 +78,9 @@ export function MentorTab({
               </div>
               <button 
                 className="btn btn-primary" 
-                onClick={() => onStartSession(mentorPrompt, mentorKnowledgeBase, 'Mentor')} 
+                onClick={handleLearnClick} 
                 style={{ background: 'var(--pastel-green)', color: 'var(--pastel-green-text)', borderColor: 'transparent', width: '100%' }}
-                disabled={isLoading}
+                disabled={!isButtonEnabled}
               >
                 {isLoading ? "Provisioning..." : "Learn"}
               </button>
@@ -81,15 +88,15 @@ export function MentorTab({
           ) : (
             <div>
               <div style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '12px' }}>
-                The Mentor is watching. Finish a Date to generate custom feedback, or start a general coaching session below.
+                Mentor feedback pending. Complete a Date session to generate personalized debrief instructions.
               </div>
               <button 
                 className="btn btn-primary" 
-                onClick={() => onStartSession(mentorPrompt, mentorKnowledgeBase, 'Mentor')} 
-                style={{ width: '100%' }}
-                disabled={isLoading}
+                onClick={handleLearnClick} 
+                style={{ width: '100%', opacity: 0.5, cursor: 'not-allowed' }}
+                disabled={true}
               >
-                {isLoading ? "Provisioning..." : "Learn"}
+                Learn (Requires Completed Date)
               </button>
             </div>
           )}

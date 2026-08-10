@@ -45,12 +45,13 @@ describe('MentorTab React Component Unit Tests', () => {
     expect(screen.getByRole('button', { name: /Learn/i })).toBeDefined();
   });
 
-  it('should render default Learn button even when synthesis prop is null', () => {
+  it('should render disabled Learn button when synthesis prop is null', () => {
     render(<MentorTab {...defaultProps} synthesis={null} />);
-    const chatBtn = screen.getByRole('button', { name: /Learn/i });
+    const chatBtn = screen.getByRole('button', { name: /Learn \(Requires Completed Date\)/i });
     expect(chatBtn).toBeDefined();
+    expect((chatBtn as HTMLButtonElement).disabled).toBe(true);
 
     fireEvent.click(chatBtn);
-    expect(defaultProps.onStartSession).toHaveBeenCalledWith('Initial mentor prompt', 'Initial mentor KB', 'Mentor');
+    expect(defaultProps.onStartSession).not.toHaveBeenCalled();
   });
 });

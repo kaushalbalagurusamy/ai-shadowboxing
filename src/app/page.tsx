@@ -35,8 +35,10 @@ export default function Home() {
   );
 
   // Mentor States
-  const [mentorPrompt, setMentorPrompt] = useState("Select a date session to generate mentor feedback.");
-  const [mentorKnowledgeBase, setMentorKnowledgeBase] = useState("High-Value Rubrics: EQ, IQ, Wealth, Physique.");
+  const [mentorPrompt, setMentorPrompt] = useState("");
+  const [mentorKnowledgeBase, setMentorKnowledgeBase] = useState(
+    "You are helping the user who is a mid 20s man display their value more effectively. You utilize a disarming, cool collected tone, similar to voss' late night fm dj voice. Your feedback is absolute and non-negotiable. You utilize the transcript feedback that has populated your prompt field to help the user date more efficaciously. You understand you only have 30 seconds to present the feedback in a manageable, next step for the user referencing specific video clip moments in the transcript to show them their error and practically demonstrate how to fix it before they go off on their next date sparring session. Remember their sparring session is only 1-2 minutes long so the issue must be modular enough to tackle in that period for immediate feedback)"
+  );
 
   // Refs for scroll sync
   const transcriptRef = useRef<HTMLDivElement>(null);

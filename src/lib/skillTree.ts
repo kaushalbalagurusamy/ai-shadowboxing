@@ -24,7 +24,7 @@ export interface UserProgressState {
 export const SKILL_TREE_CURRICULUM: Record<number, SkillTierDefinition> = {
   1: {
     level: 1,
-    name: "Tier 1: Physical Presence & Composure",
+    name: "Physical Demeanor",
     focusPillar: "Physique",
     description: "Master posture, steady eye contact, vocal composure, and zero fidgeting under screening pressure.",
     targetRubricItems: [
@@ -43,7 +43,7 @@ export const SKILL_TREE_CURRICULUM: Record<number, SkillTierDefinition> = {
   },
   2: {
     level: 2,
-    name: "Tier 2: Emotional Grounding & Vocal Stability (EQ)",
+    name: "EQ",
     focusPillar: "EQ",
     description: "Handle awkward silences, subtle probes, and emotional stress-tests without validation-seeking.",
     targetRubricItems: [
@@ -62,7 +62,7 @@ export const SKILL_TREE_CURRICULUM: Record<number, SkillTierDefinition> = {
   },
   3: {
     level: 3,
-    name: "Tier 3: Intellectual Depth & Conversational Rigor (IQ)",
+    name: "IQ",
     focusPillar: "IQ",
     description: "Drive intellectually stimulating dialogue, active listening, and sharp conversational banter.",
     targetRubricItems: [
@@ -81,7 +81,7 @@ export const SKILL_TREE_CURRICULUM: Record<number, SkillTierDefinition> = {
   },
   4: {
     level: 4,
-    name: "Tier 4: Status & Lifestyle Authenticity (Wealth)",
+    name: "Status",
     focusPillar: "Wealth",
     description: "Display authentic high status, career grounding, and lifestyle congruence without humble-bragging.",
     targetRubricItems: [
@@ -100,22 +100,22 @@ export const SKILL_TREE_CURRICULUM: Record<number, SkillTierDefinition> = {
   },
   5: {
     level: 5,
-    name: "Tier 5: Apex Multi-Pillar Integration (Mastery)",
+    name: "Escalation Speed",
     focusPillar: "Apex",
-    description: "Integrate physical presence, EQ, IQ, and status seamlessly under high-stakes multi-vector stress tests.",
+    description: "Synthesize physical demeanor, EQ, IQ, and status into a fluid, calibrated, and romantically escalating display.",
     targetRubricItems: [
-      "Seamlessly integrates physical presence, EQ, IQ, and status under pressure",
+      "Seamlessly integrates physical demeanor, EQ, IQ, and status under pressure",
       "Handles rapid topic switches and unexpected teasing with effortless grace",
       "Maintains absolute frame control when date tests boundaries",
       "Leads the conversation direction naturally without appearing bossy",
-      "Balances playful teasing with genuine emotional connection",
+      "Balances playful teasing with genuine romantic escalation and chemistry",
       "Responds to multi-layered screening questions with charisma",
-      "Displays unshakeable self-worth across all 4 pillars",
-      "Creates natural tension and chemistry through calibrated pacing",
+      "Displays unshakeable self-worth across all 4 core pillars",
+      "Creates natural romantic tension through calibrated vocal and emotional pacing",
       "Demonstrates high value across tone, content, and body language simultaneously",
-      "Concludes session with undeniable high-value presence"
+      "Concludes session with undeniable romantic magnetic presence"
     ],
-    partnerBasePrompt: "You are an exceptionally attractive, high-status NYC corporate attorney on a first date. You run a comprehensive, multi-vector screening test across presence, intelligence, emotional stability, and status. You only grant high interest to truly exceptional men."
+    partnerBasePrompt: "You are an exceptionally attractive, high-status NYC corporate attorney on a first date. You run a comprehensive screening test across physical demeanor, intelligence, emotional stability, and status, yielding to romantic escalation only when true high value is demonstrated."
   }
 };
 

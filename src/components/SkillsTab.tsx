@@ -70,7 +70,7 @@ export function SkillsTab({ synthesis }: SkillsTabProps) {
                     Level {lvl}
                   </div>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
-                    {tierDef.name.split(': ')[1] || tierDef.name}
+                    {tierDef.name}
                   </div>
                 </div>
 

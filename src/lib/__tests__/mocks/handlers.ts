@@ -104,7 +104,7 @@ export const handlers = [
                   tier_baselines: { tier_1: 90, tier_2: 70, tier_3: 80, tier_4: 60, tier_5: 50 },
                   user_progress_state: {
                     active_tier: 1,
-                    active_tier_name: 'Tier 1: Physical Presence & Composure',
+                    active_tier_name: 'Physical Demeanor',
                     unlocked_tiers: [1],
                     tier_history: {
                       tier_1: { status: 'IN_PROGRESS', best_score: 90, attempts: 1, passed: true },

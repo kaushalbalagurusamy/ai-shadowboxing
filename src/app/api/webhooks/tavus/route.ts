@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { insightStore } from '@/lib/insightStore';
 import { logger } from '@/lib/telemetry';
-import { fetchAndIngestTavusConversation } from '@/lib/tavusSync';
+import { fetchAndIngestTavusConversation, extractTextFromTurn, extractRoleFromTurn } from '@/lib/tavusSync';
 import crypto from 'crypto';
 
 // Pre-allocated static response instances to minimize heap allocation churn (L11 Principle)
@@ -82,21 +82,31 @@ export async function POST(req: Request) {
     }
 
     if (event_type === "conversation.utterance") {
-      await insightStore.addInsight(conversationId, {
-        type: "transcript_turn",
-        role: properties.role,
-        text: properties.text,
-        timestamp: properties.timestamp || new Date().toISOString()
-      });
+      const text = extractTextFromTurn(properties);
+      if (text) {
+        await insightStore.addInsight(conversationId, {
+          type: "transcript_turn",
+          role: extractRoleFromTurn(properties),
+          text,
+          timestamp: properties.timestamp || new Date().toISOString()
+        });
+      }
     } else if (event_type === "application.transcription_ready") {
-      const transcript = properties.transcript || [];
-      const turnsToInsert = transcript.map((turn: { role?: string; text?: string; timestamp?: string }) => ({
-        type: "transcript_turn",
-        role: turn.role === 'replica' ? 'assistant' : turn.role,
-        text: turn.text,
-        timestamp: turn.timestamp || new Date().toISOString()
-      }));
-      await insightStore.addInsightsMany(conversationId, turnsToInsert);
+      const transcript = properties.transcript || properties.text || properties.turns || [];
+      if (Array.isArray(transcript)) {
+        const turnsToInsert = transcript
+          .map((turn: any) => ({
+            type: "transcript_turn",
+            role: extractRoleFromTurn(turn),
+            text: extractTextFromTurn(turn),
+            timestamp: turn.timestamp ? (typeof turn.timestamp === 'number' ? new Date(turn.timestamp * 1000).toISOString() : new Date(turn.timestamp).toISOString()) : new Date().toISOString()
+          }))
+          .filter((t: any) => Boolean(t.text));
+
+        if (turnsToInsert.length > 0) {
+          await insightStore.addInsightsMany(conversationId, turnsToInsert);
+        }
+      }
     }
 
     if (event_type === "conversation.perception_tool_call") {

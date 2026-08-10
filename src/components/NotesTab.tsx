@@ -215,20 +215,18 @@ export function NotesTab({
               )}
               
               <div className="note-item" style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', background: '#ffffff', borderColor: 'var(--border)' }}>
-                <div className="note-label">Mentor Prompt (M1)</div>
+                <div className="note-label">Mentor Feedback System Prompt</div>
                 {synthesis.mentor_prompt_m1?.system_instruction || synthesis.mentor_prompt?.system_instruction}
               </div>
 
               <div className="note-item" style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', background: '#ffffff', borderColor: 'var(--border)' }}>
-                <div className="note-label">Next Partner Prompt (P1)</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <div className="note-label" style={{ marginBottom: 0 }}>Next Sparring Partner Prompt</div>
+                  <div className="badge badge-green" style={{ fontSize: '0.7rem' }}>
+                    ✓ Auto-Applied to Next Date
+                  </div>
+                </div>
                 {synthesis.partner_prompt_p1?.system_instruction || synthesis.next_partner_prompt?.system_instruction}
-                <button 
-                  className="btn btn-primary" 
-                  style={{ marginTop: '12px', fontSize: '0.75rem', padding: '6px 12px', width: 'auto' }}
-                  onClick={() => onApplyNextPartnerPrompt(synthesis.partner_prompt_p1?.system_instruction || synthesis.next_partner_prompt?.system_instruction || '')}
-                >
-                  Apply P1 to Next Date
-                </button>
               </div>
 
               <details style={{ marginTop: '8px' }}>

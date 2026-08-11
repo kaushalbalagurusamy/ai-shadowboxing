@@ -50,6 +50,38 @@ async function createTavusPal(apiKey: string, combinedPrompt: string, defaultFac
                   "required": ["reason"]
                 }
               }
+            },
+            {
+              "type": "function",
+              "function": {
+                "name": "log_behavioral_signal",
+                "description": "Triggered when observing a clear signal of high or low value (EQ, IQ, wealth, physique) during dialogue turns.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "category": { "type": "string", "enum": ["EQ", "IQ", "wealth", "physique"] },
+                    "signal_type": { "type": "string", "enum": ["positive", "negative"] },
+                    "reason": { "type": "string", "description": "Description of the specific signal observed." }
+                  },
+                  "required": ["category", "signal_type", "reason"]
+                }
+              }
+            },
+            {
+              "type": "function",
+              "function": {
+                "name": "log_incongruence_signal",
+                "description": "Triggered when the user speaks a confident/high-status line but exhibits nervous non-verbal demeanor (incongruent flex).",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "verbal_claim": { "type": "string", "description": "The verbal line spoken by the user." },
+                    "non_verbal_incongruence": { "type": "string", "description": "The conflicting non-verbal signal observed." },
+                    "severity": { "type": "string", "enum": ["minor", "major"] }
+                  },
+                  "required": ["verbal_claim", "non_verbal_incongruence", "severity"]
+                }
+              }
             }
           ]
         },

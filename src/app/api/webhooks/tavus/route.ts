@@ -109,23 +109,33 @@ export async function POST(req: Request) {
       }
     }
 
-    if (event_type === "conversation.perception_tool_call") {
-      const { function_name, arguments: args } = properties;
+    if (event_type === "conversation.perception_tool_call" || event_type === "conversation.tool_call") {
+      const function_name = properties.function_name;
+      const args = properties.arguments || {};
       
       if (function_name === "log_behavioral_signal") {
         await insightStore.addInsight(conversationId, {
           type: "behavioral_cue",
-          category: args.category,
-          signalType: args.signal_type,
-          reason: args.reason,
-          timestamp: properties.timestamp,
+          category: args.category || "EQ",
+          signalType: args.signal_type || "negative",
+          reason: args.reason || "Behavioral signal logged",
+          timestamp: properties.timestamp || new Date().toISOString(),
           imageFrame: properties.image_frame
         });
-      } else {
+      } else if (function_name === "log_incongruence_signal") {
+        await insightStore.addInsight(conversationId, {
+          type: "behavioral_cue",
+          category: "Incongruence",
+          signalType: "negative",
+          reason: `Verbal claim: "${args.verbal_claim || 'Canned line'}" contradicted by non-verbal cue: "${args.non_verbal_incongruence || 'Nervous demeanor'}"`,
+          timestamp: properties.timestamp || new Date().toISOString(),
+          imageFrame: properties.image_frame
+        });
+      } else if (function_name !== "end_conversation") {
         await insightStore.addInsight(conversationId, {
           type: "behavioral_cue",
           reason: args?.reason || "Observation detected",
-          timestamp: properties.timestamp,
+          timestamp: properties.timestamp || new Date().toISOString(),
           imageFrame: properties.image_frame
         });
       }

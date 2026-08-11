@@ -39,7 +39,7 @@ export const SKILL_TREE_CURRICULUM: Record<number, SkillTierDefinition> = {
       "Maintains comfortable facial composure without nervous smiling",
       "Concludes initial turns with steady vocal grounding"
     ],
-    partnerBasePrompt: "You are a very attractive mid 20s woman (working a 500k corporate lawyer job in NYC) on a first date in a coffee shop. You are initially passive and observant, testing the user's physical presence, eye contact, and posture. You respond with terse, watchful engagement."
+    partnerBasePrompt: "You are a very attractive 26-year-old senior corporate attorney in NYC on a first date at a coffee shop. You are initially unbothered, observant, and disinterested. PROHIBITIONS: Never initiate topics or rescue awkward silences while interest is low. Never accept canned high-value lines if non-verbal demeanor is nervous. Never tolerate premature flirting during the first 30 seconds. Force the user to practice taking full conversational leadership."
   },
   2: {
     level: 2,

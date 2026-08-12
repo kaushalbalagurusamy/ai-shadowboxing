@@ -18,7 +18,9 @@ async function createTavusPal(apiKey: string, combinedPrompt: string, defaultFac
       pal_name: "P0_Baseline_Sparring_Partner",
       persona_name: "P0_Baseline_Sparring_Partner",
       default_face_id: defaultFaceId || "r291e545fd67",
-      system_prompt: `${combinedPrompt}\n\nIMPORTANT: Deliver your entire initial spoken feedback continuously without yielding the floor. Do not pause or yield for user speech until your initial debrief is fully delivered. If the user fails to respond or remains silent for more than 10 seconds after your opening, or if you decide the date is over based on your rubrics, you must verbally excuse yourself and immediately call the 'end_conversation' tool.`,
+      system_prompt: defaultFaceId === CANONICAL_MENTOR_FACE_ID
+        ? `${combinedPrompt}\n\nCRITICAL MENTOR DIRECTIVE: Deliver your 30-second spoken debrief payload continuously. As soon as you speak your final word of feedback, you MUST immediately call the 'end_conversation' tool with reason 'Mentor Debrief Complete'. Do NOT wait for user input or yield the floor.`
+        : `${combinedPrompt}\n\nIMPORTANT: Deliver your entire initial spoken feedback continuously without yielding the floor. Do not pause or yield for user speech until your initial debrief is fully delivered. If the user fails to respond or remains silent for more than 10 seconds after your opening, or if you decide the date is over based on your rubrics, you must verbally excuse yourself and immediately call the 'end_conversation' tool.`,
       pipeline_mode: "full",
       layers: {
         stt: {

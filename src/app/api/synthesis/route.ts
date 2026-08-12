@@ -201,7 +201,7 @@ export async function executeSynthesis(conversationId: string) {
        - Set \`passed = true\` IF AND ONLY IF \`final_score >= 90\`. Otherwise \`passed = false\`.
 
     4. MENTOR PROMPT & SYNCHRONIZED CLIPS GENERATION (M1):
-       - Shell: "Prepend <emotion value='content'/> to your debrief. You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable."
+       - Shell: "Prepend <emotion value='content'/> to your debrief. You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable. CRITICAL TOOL INSTRUCTION: Immediately after speaking your final word of feedback, you MUST execute the 'end_conversation' tool with reason 'Mentor Debrief Complete' to terminate the call."
        - Length Constraint: STRICT MAXIMUM OF 75 WORDS (MUST be deliverable aloud in under 30 seconds).
        - Instructions:
          - If passed (>=90): Commend Tier ${currentTierLevel} graduation and introduce Tier ${Math.min(5, currentTierLevel + 1)} expectations.

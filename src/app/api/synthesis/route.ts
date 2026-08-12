@@ -201,7 +201,7 @@ export async function executeSynthesis(conversationId: string) {
        - Set \`passed = true\` IF AND ONLY IF \`final_score >= 90\`. Otherwise \`passed = false\`.
 
     4. MENTOR PROMPT & SYNCHRONIZED CLIPS GENERATION (M1):
-       - Shell: "You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable."
+       - Shell: "Prepend <emotion value='content'/> to your debrief. You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable."
        - Length Constraint: STRICT MAXIMUM OF 75 WORDS (MUST be deliverable aloud in under 30 seconds).
        - Instructions:
          - If passed (>=90): Commend Tier ${currentTierLevel} graduation and introduce Tier ${Math.min(5, currentTierLevel + 1)} expectations.
@@ -215,6 +215,7 @@ export async function executeSynthesis(conversationId: string) {
 
     5. NEXT PARTNER PROMPT GENERATION (P1):
        - Base Partner Shell: "${currentTierDef.partnerBasePrompt}"
+       - Instructions: Require explicit <emotion value='...'> tags in prompt rules (<emotion value='neutral'/>, <emotion value='contempt'/>, <emotion value='disgusted'/>, <emotion value='content'/>, <emotion value='surprised'/>, <emotion value='excited'/>).
        - If passed (>=90): Generate Level P(n+1) system prompt advancing to Tier ${Math.min(5, currentTierLevel + 1)} partner dynamics (~150-200 words).
        - If failed (<90): Generate Level P(n) retry prompt that naturally stress-tests the specific Tier ${currentTierLevel} \`value_leak_identified\` (~150-200 words).
 

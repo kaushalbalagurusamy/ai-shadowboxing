@@ -25,7 +25,8 @@ async function createTavusPal(apiKey: string, combinedPrompt: string, defaultFac
           stt_engine: "tavus-parakeet"
         },
         rendering: {
-          rendering_model: "phoenix-4"
+          rendering_model: "phoenix-4",
+          tts_emotion_control: true,
         },
         timing: {
           timing_model: "sparrow-1"

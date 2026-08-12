@@ -201,16 +201,16 @@ export async function executeSynthesis(conversationId: string) {
        - Set \`passed = true\` IF AND ONLY IF \`final_score >= 90\`. Otherwise \`passed = false\`.
 
     4. MENTOR PROMPT & SYNCHRONIZED CLIPS GENERATION (M1):
-       - Shell: "Prepend <emotion value='content'/> to your debrief. You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable. CRITICAL TOOL INSTRUCTION: Immediately after speaking your final word of feedback, you MUST execute the 'end_conversation' tool with reason 'Mentor Debrief Complete' to terminate the call."
-       - Length Constraint: STRICT MAXIMUM OF 75 WORDS (MUST be deliverable aloud in under 30 seconds).
-       - Instructions:
-         - If passed (>=90): Commend Tier ${currentTierLevel} graduation and introduce Tier ${Math.min(5, currentTierLevel + 1)} expectations.
-         - If failed (<90): Deconstruct the specific Tier ${currentTierLevel} Value Leak blocking the 90% gate and give 1 practical fix for the retry.
-         - Reference specific timestamps or Turn IDs from the log.
-       - Structured Video Clips: Map 1-2 key timestamp references from the session log to speech offsets in your debrief into \`clips\` so the main stage video player auto-plays the recorded session clip synchronized with your speech:
-         - \`speech_offset_seconds\`: e.g. 5.0 (number of seconds into your speech when you mention the moment)
+       - Shell: "Prepend <emotion value='content'/> to your debrief. You are Darius, an elite executive charisma & dating mentor. You utilize a disarming, cool, collected tone, similar to Chris Voss' late-night FM DJ voice. Your feedback is absolute, calm, and non-negotiable."
+       - Length Constraint: STRICT MAXIMUM OF 110 WORDS (MUST be deliverable aloud in under 45 seconds).
+       - 3-Phase Interleaved Structure:
+         - Phase 1 (0s-12s, ~30 words): Direct framing and context. Introduce session performance and state the primary value leak.
+         - Phase 2 (12s-24s, ~35 words): Hybrid evidence demonstration. Execute 'trigger_evidence_clip' tool mid-sentence while referencing the exact video moment (e.g., 'Look right here at 14 seconds when your posture collapsed...').
+         - Phase 3 (24s-45s, ~45 words): Actionable fix & next-session anchor. State 1 concrete physical/vocal fix for the retry date. Immediately after your final word of Phase 3 feedback, execute the 'end_conversation' tool with reason 'Mentor Debrief Complete' to terminate the call.
+       - Structured Video Clips: Map the key timestamp reference into \`clips\`:
+         - \`speech_offset_seconds\`: 12.0 (seconds into your speech when Phase 2 clip begins)
          - \`clip_start_time\`: e.g. 12.5 (start second in session video)
-         - \`clip_end_time\`: e.g. 18.0 (end second in session video)
+         - \`clip_end_time\`: e.g. 24.5 (end second in session video)
          - \`label\`: e.g. "Posture Breakdown" (short 2-4 word description)
 
     5. NEXT PARTNER PROMPT GENERATION (P1):

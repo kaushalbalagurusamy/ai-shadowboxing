@@ -19,7 +19,7 @@ async function createTavusPal(apiKey: string, combinedPrompt: string, defaultFac
       persona_name: "P0_Baseline_Sparring_Partner",
       default_face_id: defaultFaceId || "r291e545fd67",
       system_prompt: defaultFaceId === CANONICAL_MENTOR_FACE_ID
-        ? `${combinedPrompt}\n\nCRITICAL MENTOR DIRECTIVE: Deliver your 30-second spoken debrief payload continuously. As soon as you speak your final word of feedback, you MUST immediately call the 'end_conversation' tool with reason 'Mentor Debrief Complete'. Do NOT wait for user input or yield the floor.`
+        ? `${combinedPrompt}\n\nCRITICAL MENTOR DIRECTIVE: Deliver your 45-second 3-phase spoken debrief payload continuously. In Phase 2 (~12s), execute the 'trigger_evidence_clip' tool when referencing video evidence. In Phase 3 (~45s), as soon as you speak your final word of feedback, you MUST immediately call the 'end_conversation' tool with reason 'Mentor Debrief Complete'. Do NOT wait for user input or yield the floor.`
         : `${combinedPrompt}\n\nIMPORTANT: Deliver your entire initial spoken feedback continuously without yielding the floor. Do not pause or yield for user speech until your initial debrief is fully delivered. If the user fails to respond or remains silent for more than 10 seconds after your opening, or if you decide the date is over based on your rubrics, you must verbally excuse yourself and immediately call the 'end_conversation' tool.`,
       pipeline_mode: "full",
       layers: {
@@ -44,13 +44,29 @@ async function createTavusPal(apiKey: string, combinedPrompt: string, defaultFac
               "type": "function",
               "function": {
                 "name": "end_conversation",
-                "description": "Call this tool immediately when you decide the date is over or when the user is inactive for more than 10 seconds. This will hang up the call.",
+                "description": "Call this tool immediately when you decide the date is over or upon completing your 45-second debrief.",
                 "parameters": {
                   "type": "object",
                   "properties": {
-                    "reason": { "type": "string", "description": "The reason for ending the date (e.g., 'User Inactivity', 'Low Interest', 'Natural Conclusion')." }
+                    "reason": { "type": "string", "description": "The reason for ending the date (e.g., 'User Inactivity', 'Low Interest', 'Mentor Debrief Complete')." }
                   },
                   "required": ["reason"]
+                }
+              }
+            },
+            {
+              "type": "function",
+              "function": {
+                "name": "trigger_evidence_clip",
+                "description": "Call this tool at the exact moment in your debrief when referencing session video evidence to trigger the ducked video clip on the main stage.",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "start_time": { "type": "number", "description": "Start timestamp in seconds of the recorded session video (e.g. 12.5)." },
+                    "end_time": { "type": "number", "description": "End timestamp in seconds of the recorded session video (e.g. 24.5)." },
+                    "label": { "type": "string", "description": "Short 2-4 word description of the observed value leak." }
+                  },
+                  "required": ["start_time", "end_time", "label"]
                 }
               }
             },

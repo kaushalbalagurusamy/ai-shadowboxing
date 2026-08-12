@@ -56,18 +56,25 @@ export function MentorTab({
       const elapsedSeconds = (Date.now() - speechStartTimeRef.current) / 1000;
 
       clips.forEach(clip => {
+        const clipDuration = clip.clip_end_time - clip.clip_start_time;
         if (
           elapsedSeconds >= clip.speech_offset_seconds &&
-          elapsedSeconds < clip.speech_offset_seconds + (clip.clip_end_time - clip.clip_start_time)
+          elapsedSeconds < clip.speech_offset_seconds + clipDuration
         ) {
           setActiveClipLabel(clip.label);
           if (mainVideoRef.current) {
+            mainVideoRef.current.volume = 0.15; // -18dB Audio Ducking for live Darius commentary
             if (mainVideoRef.current.paused) {
               mainVideoRef.current.currentTime = clip.clip_start_time;
               mainVideoRef.current.play().catch(() => {});
             } else if (mainVideoRef.current.currentTime >= clip.clip_end_time) {
               mainVideoRef.current.pause();
             }
+          }
+        } else if (elapsedSeconds >= clip.speech_offset_seconds + clipDuration) {
+          if (mainVideoRef.current && !mainVideoRef.current.paused) {
+            mainVideoRef.current.pause();
+            setActiveClipLabel(null);
           }
         }
       });
@@ -104,7 +111,6 @@ export function MentorTab({
               ref={mainVideoRef}
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               playsInline
-              muted
             />
 
             {/* Real-time Clip Overlay */}
@@ -124,7 +130,7 @@ export function MentorTab({
                   border: '1px solid rgba(0,255,204,0.4)' 
                 }}
               >
-                EVIDENCE CLIP: {activeClipLabel}
+                EVIDENCE CLIP: {activeClipLabel} (-18dB Ducked Audio)
               </div>
             )}
           </div>
@@ -136,14 +142,14 @@ export function MentorTab({
                 <span className="pulse" style={{ color: '#00c864' }}>●</span> Darius (Mentor)
               </div>
               <div className="badge badge-green" style={{ fontSize: '0.7rem', padding: '4px 8px', marginBottom: '12px' }}>
-                Uninterruptible 30s Debrief
+                Uninterruptible 45s Debrief
               </div>
             </div>
 
             <div style={{ fontSize: '0.75rem', opacity: 0.7, color: '#ffffff', lineHeight: '1.4' }}>
-              Darius is delivering your 30-second debrief. Clips play automatically on the Main Stage.
-            </div>
+              Darius is delivering your 45-second hybrid debrief. Evidence clips play on the Main Stage with ducked audio during Phase 2.
           </div>
+        </div>
 
         </div>
       ) : (

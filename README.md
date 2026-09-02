@@ -22,7 +22,7 @@ Multimodal conversational sparring simulator combining low-latency neural video 
        |      (insights table: postgres_changes)       (system.shutdown event / GET sync)
        |                                                         |
        |                                                         v
-       |                                        [ Pass 1: The Zipper (Gemini 3.6 Flash) ]
+       |                                        [ Pass 1: The Zipper (Gemini 3.7 Flash) ]
        |                                        (Timestamp Alignment & Transcript Distill)
        |                                                         |
        |                                                         v
@@ -87,7 +87,7 @@ ai-shadowboxing/
 
 * **Node.js**: 20.x or higher
 * **Tavus Account**: CVI v2 API key with Phoenix-4 and Raven-1 access
-* **Google Cloud**: Gemini 3.6 Flash API key
+* **Google AI Studio**: Gemini 3.7 Flash API key (Free Tier eligible)
 * **Supabase Project**: Database URL and Anon key
 
 ---
@@ -100,15 +100,16 @@ Create your `.env.local` file from the template:
 cp .env.example .env.local
 ```
 
-| Variable | Description |
-| :--- | :--- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous API key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side only) |
-| `TAVUS_API_KEY` | Tavus CVI v2 API key |
-| `TAVUS_REPLICA_ID` | Default date avatar replica ID |
-| `TAVUS_MENTOR_REPLICA_ID` | Darius mentor replica ID |
-| `GEMINI_API_KEY` | Google Gemini API key for synthesis and maj@3 ensemble |
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_SUPABASE_URL` | *Required* | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *Required* | Supabase anonymous API key |
+| `SUPABASE_SERVICE_ROLE_KEY` | *Required* | Supabase service role key (server-side only) |
+| `TAVUS_API_KEY` | *Required* | Tavus CVI v2 API key |
+| `TAVUS_REPLICA_ID` | *Required* | Default date avatar replica ID |
+| `TAVUS_MENTOR_REPLICA_ID` | *Required* | Darius mentor replica ID |
+| `GOOGLE_GENERATIVE_AI_API_KEY`| *Required* | Google AI Studio Gemini API key |
+| `GEMINI_MODEL` | `gemini-3.7-flash` | Reasoning engine model name |
 
 ---
 

@@ -22,7 +22,7 @@ Real-time feedback during an active date simulation disrupts immersion. However,
 
 ## Decision Outcome
 
-Implement a two-pass synthesis pipeline using **Gemini 3.6 Flash**:
+Implement a two-pass synthesis pipeline using **Gemini 3.7 Flash**:
 
 ```
 Session End / Webhook Trigger

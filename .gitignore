@@ -10,3 +10,5 @@ node_modules
 .vercel
 .env*.local
 *.tsbuildinfo
+test-results/
+playwright-report/

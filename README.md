@@ -1,6 +1,12 @@
 # AI Shadowboxing
 
-Multimodal conversational sparring simulator combining low-latency neural video avatars (Tavus CVI v2), real-time non-verbal computer vision perception, deterministic two-pass Gemini evaluation (`maj@3` ensemble), and interactive mentor debriefs.
+High-stakes interpersonal communication simulator integrating sub-500ms neural video avatars, real-time non-verbal computer vision perception, and deterministic multi-pass Gemini evaluation.
+
+---
+
+## Overview
+
+AI Shadowboxing is a real-time behavioral training simulator engineered for high-stakes interpersonal dynamics, conversational presence, and social calibration. Combining low-latency neural video avatars with multimodal computer vision perception, the platform evaluates not only semantic dialogue, but the underlying mechanics of delivery: vocal cadence, micro-expressions, ocular stability, and emotional congruency under conversational pressure.
 
 ---
 
@@ -44,13 +50,13 @@ Multimodal conversational sparring simulator combining low-latency neural video 
 
 ## Core Capabilities
 
-* **Sub-500ms Neural Video Avatars**: Bidirectional WebRTC streaming powered by Tavus Phoenix-4 with dynamic inline XML emotion tagging (`<emotion value="neutral"/>`, `<emotion value="contempt"/>`, `<emotion value="excited"/>`).
-* **Real-Time Multimodal Perception**: Tavus Raven-1 tracks non-verbal cues (eye contact stability, nervous laughter, posture, and vocal inflection) natively during live calls.
+* **Sub-500ms Neural Video Avatars**: Bidirectional WebRTC streaming powered by Tavus Phoenix-4 with dynamic inline XML emotion tagging (`<emotion value="neutral"/>`, `<emotion value="contempt"/>`, `<emotion value="excited"/>`) for realistic conversational responsiveness.
+* **Real-Time Non-Verbal Computer Vision Perception**: Tavus Raven-1 tracks non-verbal behavioral cues (ocular stability, nervous disfluency, postural alignment, and vocal inflection) natively during live interactions.
 * **Two-Pass Gemini Synthesis Engine**:
   * **Pass 1 (The Zipper)**: Reconciles high-frequency perception event timestamps with conversational transcripts into an immutable master performance log.
   * **Pass 2 (maj@3 Ensemble)**: Three parallel Chain-of-Thought evaluators score performance against 5-tier behavioral rubrics with a strict 90% progression gate.
-* **Interactive Mentor Debrief (Darius)**: Zoom-style post-session video review featuring timestamped evidence clips with automated $-18\text{dB}$ audio ducking and real-time interactive Q&A.
-* **5-Tier Persistent Skill Ladder**: Supabase-backed skill tree tracking user progress from Foundations to Advanced Conversational Mastery.
+* **Interactive Mentor Debrief (Darius)**: Post-session video review featuring timestamped evidence clips with automated $-18\text{dB}$ audio ducking and real-time interactive Q&A.
+* **5-Tier Persistent Competency Matrix**: Supabase-backed skill tree tracking user progress from foundational presence to advanced conversational mastery.
 
 ---
 
@@ -106,7 +112,7 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *Required* | Supabase anonymous API key |
 | `SUPABASE_SERVICE_ROLE_KEY` | *Required* | Supabase service role key (server-side only) |
 | `TAVUS_API_KEY` | *Required* | Tavus CVI v2 API key |
-| `TAVUS_REPLICA_ID` | *Required* | Default date avatar replica ID |
+| `TAVUS_REPLICA_ID` | *Required* | Default sparring partner replica ID |
 | `TAVUS_MENTOR_REPLICA_ID` | *Required* | Darius mentor replica ID |
 | `GOOGLE_GENERATIVE_AI_API_KEY`| *Required* | Google AI Studio Gemini API key |
 | `GEMINI_MODEL` | `gemini-3.7-flash` | Reasoning engine model name |

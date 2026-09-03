@@ -1,0 +1,16 @@
+.git
+.github
+.next
+.vercel
+node_modules
+.env
+.env*.local
+.envrc
+test-results
+playwright-report
+*.log
+.DS_Store
+docs/
+*.md
+.editorconfig
+LICENSE

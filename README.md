@@ -1,5 +1,8 @@
 # AI Shadowboxing
 
+[![CI](https://github.com/kaushalbalagurusamy/ai-shadowboxing/actions/workflows/ci.yml/badge.svg)](https://github.com/kaushalbalagurusamy/ai-shadowboxing/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 High-stakes interpersonal communication simulator integrating sub-500ms neural video avatars, real-time non-verbal computer vision perception, and deterministic multi-pass Gemini evaluation.
 
 ---
@@ -119,30 +122,32 @@ cp .env.example .env.local
 
 ---
 
-## Quickstart
+## Getting Started
 
-### 1. Installation
+### Option A: Docker Compose (Recommended)
+
+Run the containerized Next.js 16 standalone application:
 
 ```bash
-git clone https://github.com/kaushalbalagurusamy/ai-shadowboxing.git
-cd ai-shadowboxing
-
-npm install
+docker compose up --build
 ```
 
-### 2. Running Development Server
+The application will be accessible at `http://localhost:3000`.
+
+### Option B: Local Node.js Environment
 
 ```bash
+# 1. Install dependencies
+npm ci
+
+# 2. Run local development server
 npm run dev
 ```
 
 The application will start locally at `http://localhost:3000`.
 
-### 3. Production Build
-
-```bash
-npm run build
-npm run start
+# 3. Production build
+npm run build && npm run start
 ```
 
 ---

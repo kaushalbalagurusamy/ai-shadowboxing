@@ -122,11 +122,27 @@ const TIER_DEFAULT_EMOTION: Record<ReceptivityTier, TargetEmotion> = {
   OPEN: 'content',
 };
 
+/**
+ * Tier-Specific Injected LLM Context Templates (ADR 0007)
+ * Strict token budget: <= 45 tokens (< 250 bytes) per injection.
+ */
+export const TIER_CONTEXT_TEMPLATES: Record<ReceptivityTier, (score: number, primaryLeak?: string) => string> = {
+  LOCKED: (score: number, primaryLeak?: string) => 
+    `[RECEPTIVITY STATE: LOCKED (${Math.round(score)}/100). Primary leak: ${primaryLeak || 'nervous fidgeting or submissive frame'}. Your tone is unimpressed, terse, and skeptical. You are dominant. Do not yield until composure improves.]`,
+    
+  SCREENING: (score: number) => 
+    `[RECEPTIVITY STATE: SCREENING (${Math.round(score)}/100). Neutral baseline. Observing closely. Hold silences and require user to lead conversational topics.]`,
+    
+  OPEN: (score: number) => 
+    `[RECEPTIVITY STATE: OPEN (${Math.round(score)}/100). Intrigued by user composure. Warm up slightly, engage in playful intellectual banter, and allow romantic escalation.]`
+};
+
 export class InterestController {
   private score: number;
   private tier: ReceptivityTier;
   private lastSignalTime: number;
   private lastDecayTime: number;
+  private lastContextInjectionTime: number;
   private readonly auditBuffer: CircularAuditBuffer;
 
   // Hysteresis Deadband Constants (ADR 0006)
@@ -138,11 +154,17 @@ export class InterestController {
   private readonly SCREENING_UPPER_THRESHOLD = 70.0; // Climbs >= 70 enters OPEN
   private readonly OPEN_LOWER_THRESHOLD = 65.0; // Needs < 65 to fall to SCREENING
 
-  constructor(initialScore: number = 50.0, auditCapacity: number = 50) {
+  // Context Synchronization Constants (ADR 0007)
+  private readonly HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds
+  private readonly DEBOUNCE_INTERVAL_MS = 5000;   // 5 seconds debounce on tier changes
+
+  constructor(initialScore: number = 50.0, auditCapacity: number = 50, initialTimeMs?: number) {
     this.score = Math.max(0, Math.min(100, initialScore));
     this.tier = this.calculateInitialTier(this.score);
-    this.lastSignalTime = Date.now();
-    this.lastDecayTime = this.lastSignalTime;
+    const now = initialTimeMs !== undefined ? initialTimeMs : Date.now();
+    this.lastSignalTime = now;
+    this.lastDecayTime = now;
+    this.lastContextInjectionTime = now;
     this.auditBuffer = new CircularAuditBuffer(auditCapacity);
   }
 
@@ -314,11 +336,47 @@ export class InterestController {
     return this.auditBuffer.toArray();
   }
 
-  public reset(initialScore: number = 50.0): void {
+  /**
+   * Checks if periodic context synchronization is required (ADR 0007)
+   * Triggers on:
+   * 1. 30s Heartbeat (timeSinceLast >= 30,000ms)
+   * 2. Tier Boundary Shift (forceTierChanged === true, with 5s debounce barrier)
+   */
+  public checkContextInjection(currentTimeMs?: number, forceTierChanged?: boolean): { shouldInject: boolean; contextPayload?: string } {
+    const now = currentTimeMs !== undefined ? currentTimeMs : Date.now();
+    const timeSinceLast = now - this.lastContextInjectionTime;
+
+    const isHeartbeat = timeSinceLast >= this.HEARTBEAT_INTERVAL_MS;
+    const isTierShift = Boolean(forceTierChanged) && (timeSinceLast >= this.DEBOUNCE_INTERVAL_MS);
+
+    if (isHeartbeat || isTierShift) {
+      this.lastContextInjectionTime = now;
+      let primaryLeak: string | undefined;
+      if (this.tier === 'LOCKED') {
+        const recentNeg = this.auditBuffer.toArray().reverse().find(e => e.signalType === 'negative');
+        if (recentNeg) {
+          primaryLeak = recentNeg.signalId || recentNeg.category;
+        }
+      }
+      const templateFn = TIER_CONTEXT_TEMPLATES[this.tier];
+      const contextPayload = templateFn(this.score, primaryLeak);
+      return { shouldInject: true, contextPayload };
+    }
+
+    return { shouldInject: false };
+  }
+
+  public getLastContextInjectionTime(): number {
+    return this.lastContextInjectionTime;
+  }
+
+  public reset(initialScore: number = 50.0, initialTimeMs?: number): void {
     this.score = Math.max(0, Math.min(100, initialScore));
     this.tier = this.calculateInitialTier(this.score);
-    this.lastSignalTime = Date.now();
-    this.lastDecayTime = this.lastSignalTime;
+    const now = initialTimeMs !== undefined ? initialTimeMs : Date.now();
+    this.lastSignalTime = now;
+    this.lastDecayTime = now;
+    this.lastContextInjectionTime = now;
     this.auditBuffer.clear();
   }
 }

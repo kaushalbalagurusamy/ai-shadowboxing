@@ -48,6 +48,17 @@ export function useTavusSession() {
     }, '*');
   };
 
+  // Helper to dispatch LLM context synchronization to Tavus iframe (ADR 0007)
+  const dispatchContextInjection = (contextPayload: string) => {
+    if (!iframeRef.current?.contentWindow) return;
+    iframeRef.current.contentWindow.postMessage({
+      type: 'conversation.append_llm_context',
+      properties: {
+        context: contextPayload,
+      },
+    }, '*');
+  };
+
   // Listen for Tavus iframe messages (Session end + Behavioral Signals)
   useEffect(() => {
     const handleTavusMessage = (event: MessageEvent) => {
@@ -85,6 +96,14 @@ export function useTavusSession() {
 
         // Immediate edge dispatch back to Tavus iframe without server round trip
         dispatchIframeCommand(step.physics, step.emotion);
+
+        // Check if tier changed and requires debounced context injection (ADR 0007)
+        if (step.tierChanged) {
+          const ctx = interestControllerRef.current.checkContextInjection(Date.now(), true);
+          if (ctx.shouldInject && ctx.contextPayload) {
+            dispatchContextInjection(ctx.contextPayload);
+          }
+        }
       }
     };
 
@@ -92,12 +111,13 @@ export function useTavusSession() {
     return () => window.removeEventListener('message', handleTavusMessage);
   }, [conversationId]);
 
-  // Temporal Leaky Integration (Idle Relaxation: 1s interval tick)
+  // Temporal Leaky Integration & Periodic Context Synchronization (1s tick)
   useEffect(() => {
     if (!conversationUrl) return;
 
     const interval = setInterval(() => {
-      const decay = interestControllerRef.current.tickIdleDecay();
+      const now = Date.now();
+      const decay = interestControllerRef.current.tickIdleDecay(now);
       if (decay.decayed) {
         setReceptivityScore(decay.newScore);
         if (decay.tierChanged) {
@@ -105,6 +125,12 @@ export function useTavusSession() {
           setCurrentPhysics(decay.physics);
           dispatchIframeCommand(decay.physics, decay.emotion);
         }
+      }
+
+      // Periodic 30s Heartbeat or Tier Shift Context Synchronization (ADR 0007)
+      const ctx = interestControllerRef.current.checkContextInjection(now, decay.tierChanged);
+      if (ctx.shouldInject && ctx.contextPayload) {
+        dispatchContextInjection(ctx.contextPayload);
       }
     }, 1000);
 

@@ -37,3 +37,13 @@ export const tavusPalResponseSchema = z.object({
 
 export type TavusPalResponse = z.infer<typeof tavusPalResponseSchema>;
 
+export const behavioralSignalSchema = z.object({
+  signal_id: z.string().optional(),
+  category: z.string().optional(),
+  signal_type: z.string().optional(),
+  magnitude: z.number().optional(),
+  reason: z.string().optional(),
+});
+
+export type BehavioralSignalInput = z.infer<typeof behavioralSignalSchema>;
+

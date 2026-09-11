@@ -172,10 +172,14 @@ All core architectural decisions are recorded in [`docs/adr/`](docs/adr/):
 * [`docs/adr/0002-two-pass-gemini-synthesis-and-maj3-ensemble.md`](docs/adr/0002-two-pass-gemini-synthesis-and-maj3-ensemble.md) — Two-Pass Gemini Synthesis and maj@3 Ensemble
 * [`docs/adr/0003-supabase-realtime-and-persistent-skill-tree.md`](docs/adr/0003-supabase-realtime-and-persistent-skill-tree.md) — Supabase Realtime & Persistent Skill Tree
 * [`docs/adr/0004-interactive-debrief-with-evidence-clip-playback.md`](docs/adr/0004-interactive-debrief-with-evidence-clip-playback.md) — Interactive Debrief with Evidence Clip Playback
+* [`docs/adr/0005-structured-decision-matrix-and-precision-rubric-grounding.md`](docs/adr/0005-structured-decision-matrix-and-precision-rubric-grounding.md) — Structured Decision Matrix & Precision Rubric Grounding
+* [`docs/adr/0006-edge-triggered-receptivity-governor-and-iframe-bridge.md`](docs/adr/0006-edge-triggered-receptivity-governor-and-iframe-bridge.md) — Edge-Triggered Receptivity Governor & Bidirectional Iframe Bridge
+* [`docs/adr/0007-periodic-context-injection-and-state-aware-prompting.md`](docs/adr/0007-periodic-context-injection-and-state-aware-prompting.md) — Periodic Context Synchronization & State-Aware Persona Prompting
 
 Deep architectural specifications and PRDs are in [`.docs/`](.docs/):
 * [`.docs/architecture.md`](.docs/architecture.md) — Comprehensive System Architecture & Data Flow
 * [`.docs/product_requirements.md`](.docs/product_requirements.md) — Product Requirements Document (PRD)
+* [`.docs/phase_3_prd.md`](.docs/phase_3_prd.md) — Phase 3 PRD: Dynamic Interest Loop (DIL) & Low-Latency Receptivity Mapping
 * [`.docs/testing_strategy.md`](.docs/testing_strategy.md) — Multimodal Testing & Evaluation Strategy
 
 ---

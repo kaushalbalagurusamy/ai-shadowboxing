@@ -22,6 +22,8 @@ export interface SessionInsight {
   text?: string;
   category?: string;
   signalType?: string;
+  signalId?: string;
+  magnitude?: number;
   reason?: string;
   timestamp?: string;
   imageFrame?: string;

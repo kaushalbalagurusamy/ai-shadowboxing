@@ -1,5 +1,6 @@
 import { insightStore, SessionInsight } from './insightStore';
 import { logger } from './telemetry';
+import { lookupRubric } from './rubrics';
 
 export function extractTextFromTurn(item: any): string {
   if (!item) return '';
@@ -100,15 +101,24 @@ export async function fetchAndIngestTavusConversation(conversationId: string): P
         };
       }
 
-      if (eventType === 'conversation.perception_tool_call') {
+      if (eventType === 'conversation.perception_tool_call' || eventType === 'conversation.tool_call') {
         const fnName = props.function_name;
         const args = props.arguments || {};
         if (fnName === 'log_behavioral_signal') {
-          turnsToInsert.push({
-            type: 'behavioral_cue',
+          const resolved = lookupRubric({
+            signalId: args.signal_id,
             category: args.category,
             signalType: args.signal_type,
             reason: args.reason,
+          });
+
+          turnsToInsert.push({
+            type: 'behavioral_cue',
+            category: resolved.category,
+            signalType: resolved.signalType,
+            signalId: args.signal_id || resolved.signalId,
+            magnitude: typeof args.magnitude === 'number' ? args.magnitude : resolved.delta,
+            reason: args.reason || resolved.description,
             timestamp: props.timestamp || evt.timestamp || new Date().toISOString(),
             imageFrame: props.image_frame
           });

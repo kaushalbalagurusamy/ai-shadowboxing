@@ -28,6 +28,7 @@ The project documentation is structured into four distinct cognitive pillars:
 | **Visual Persistence Plan** | [`.docs/custom_pal_persistence_plan.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/custom_pal_persistence_plan.md) | Canonical identity binding (`default_face_id`), SHA-256 deduplication, and avatar selector deprecation plan. |
 | **Phase 1 PRD** | [`.docs/phase_1_prd.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/phase_1_prd.md) | Historical PRD: P0 Baseline Sparring Partner implementation. |
 | **Phase 2 PRD** | [`.docs/phase_2_prd.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/phase_2_prd.md) | Historical PRD: M1 Mentor synthesis and the "Zipper" distillation engine. |
+| **Phase 3 PRD** | [`.docs/phase_3_prd.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/.docs/phase_3_prd.md) | Feature Proposal: Dynamic Interest Loop (DIL) & Low-Latency Receptivity Mapping. |
 | **Agent Directives** | [`GEMINI.md`](file:///Users/kaushal/Documents/Github/ai-shadowboxing/GEMINI.md) | Google L9+ Operational Directives & L11+ Systems Performance Principles. |
 
 ---

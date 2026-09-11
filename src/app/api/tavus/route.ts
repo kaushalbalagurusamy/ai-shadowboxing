@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { startSessionSchema, tavusPalResponseSchema } from '@/lib/schemas';
 import { personaStore } from '@/lib/personaStore';
 import { CANONICAL_MENTOR_FACE_ID, DATE_MAX_CALL_DURATION, MENTOR_MAX_CALL_DURATION } from '@/lib/constants';
+import { DECISION_MATRIX_CSV } from '@/lib/rubrics';
 
 // In-memory persona/PAL cache mapping SHA-256 config hash to Tavus pal_id
 const personaCache = new Map<string, string>();
@@ -74,12 +75,14 @@ async function createTavusPal(apiKey: string, combinedPrompt: string, defaultFac
               "type": "function",
               "function": {
                 "name": "log_behavioral_signal",
-                "description": "Triggered when observing a clear signal of high or low value (EQ, IQ, wealth, physique) during dialogue turns.",
+                "description": "Triggered when observing a clear signal of high or low value (EQ, IQ, wealth, physique) defined in the Decision Matrix.",
                 "parameters": {
                   "type": "object",
                   "properties": {
-                    "category": { "type": "string", "enum": ["EQ", "IQ", "wealth", "physique"] },
+                    "signal_id": { "type": "string", "description": "Canonical key from Decision Matrix (e.g. PHY_FIDGET_TOUCH, EQ_NERVOUS_LAUGHTER)." },
+                    "category": { "type": "string", "enum": ["Physique", "EQ", "IQ", "Wealth", "physique", "wealth"] },
                     "signal_type": { "type": "string", "enum": ["positive", "negative"] },
+                    "magnitude": { "type": "number", "description": "Point delta value specified in Decision Matrix (-50 to +50)." },
                     "reason": { "type": "string", "description": "Description of the specific signal observed." }
                   },
                   "required": ["category", "signal_type", "reason"]
@@ -112,18 +115,20 @@ async function createTavusPal(apiKey: string, combinedPrompt: string, defaultFac
             "IQ & Wealth Inferences: Based on vocabulary, conversational depth, and mentions of career/lifestyle, what is the inferred value? Note any over-compensation or 'bold claims' that feel fabricated vs verified.",
             "Screen-Based Authenticity: Note any screen-related behavior indicating a lack of presence (reading notes, looking at other monitors). Does the user's vocal pitch and eye contact suggest they are playing a 'fake deep guy' persona?"
           ],
-          visual_tool_prompt: "You have tools to detect specific behavioral signals based on the provided Knowledge Base (EQ, IQ, wealth, and physique). Use them to log real-time insights when the user displays high or low value traits.",
+          visual_tool_prompt: "You have tools to detect specific behavioral signals based on the provided Decision Matrix (EQ, IQ, wealth, and physique). Use them to log real-time insights when the user displays high or low value traits, including the signal_id and magnitude from the rubric.",
           visual_tools: [
             {
               "type": "function",
               "function": {
                 "name": "log_behavioral_signal",
-                "description": "Triggered when the user displays a clear signal of high or low value (EQ, IQ, wealth, physique) as defined in the rubrics.",
+                "description": "Triggered when the user displays a clear signal of high or low value (EQ, IQ, wealth, physique) defined in the Decision Matrix.",
                 "parameters": {
                   "type": "object",
                   "properties": {
-                    "category": { "type": "string", "enum": ["EQ", "IQ", "wealth", "physique"] },
+                    "signal_id": { "type": "string", "description": "Canonical key from Decision Matrix (e.g. PHY_FIDGET_TOUCH, EQ_NERVOUS_LAUGHTER)." },
+                    "category": { "type": "string", "enum": ["Physique", "EQ", "IQ", "Wealth", "physique", "wealth"] },
                     "signal_type": { "type": "string", "enum": ["positive", "negative"] },
+                    "magnitude": { "type": "number", "description": "Point delta value specified in Decision Matrix (-50 to +50)." },
                     "reason": { "type": "string", "description": "Description of the specific signal observed." }
                   },
                   "required": ["category", "signal_type", "reason"]
@@ -172,7 +177,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Mentor session requires a completed date session synthesis." }, { status: 400 });
     }
 
-    const combinedPrompt = `${systemPrompt}\n\nKNOWLEDGE BASE (RUBRICS):\n${knowledgeBase}`;
+    const combinedPrompt = `${systemPrompt}\n\nKNOWLEDGE BASE (RUBRICS):\n${knowledgeBase}\n\nSTRUCTURED DECISION MATRIX (CSV GROUNDING):\n${DECISION_MATRIX_CSV}`;
     const configHash = crypto.createHash('sha256').update(combinedPrompt).digest('hex');
 
     // Multi-level PAL Caching (L1 In-Memory + L2 Distributed Store)

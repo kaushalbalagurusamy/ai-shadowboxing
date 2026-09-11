@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { insightStore } from '@/lib/insightStore';
 import { logger } from '@/lib/telemetry';
 import { fetchAndIngestTavusConversation, extractTextFromTurn, extractRoleFromTurn } from '@/lib/tavusSync';
+import { lookupRubric } from '@/lib/rubrics';
 import crypto from 'crypto';
 
 // Pre-allocated static response instances to minimize heap allocation churn (L11 Principle)
@@ -114,11 +115,20 @@ export async function POST(req: Request) {
       const args = properties.arguments || {};
       
       if (function_name === "log_behavioral_signal") {
+        const resolved = lookupRubric({
+          signalId: args.signal_id,
+          category: args.category,
+          signalType: args.signal_type,
+          reason: args.reason,
+        });
+
         await insightStore.addInsight(conversationId, {
           type: "behavioral_cue",
-          category: args.category || "EQ",
-          signalType: args.signal_type || "negative",
-          reason: args.reason || "Behavioral signal logged",
+          category: resolved.category,
+          signalType: resolved.signalType,
+          signalId: args.signal_id || resolved.signalId,
+          magnitude: typeof args.magnitude === 'number' ? args.magnitude : resolved.delta,
+          reason: args.reason || resolved.description,
           timestamp: properties.timestamp || new Date().toISOString(),
           imageFrame: properties.image_frame
         });

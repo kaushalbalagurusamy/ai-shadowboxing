@@ -1,0 +1,44 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Run twice a week (Mondays and Thursdays at 00:00 UTC) to prevent Supabase auto-pausing after 7 days
+    - cron: '0 0 * * 1,4'
+  workflow_dispatch: # Allows manual execution from GitHub Actions UI
+
+jobs:
+  keep-alive:
+    name: Keep Supabase Active
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send HTTP Ping to Supabase REST API
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          # Fallback check if secrets are defined
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::SUPABASE_URL or SUPABASE_ANON_KEY repository secret is missing!"
+            echo "Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+          echo "Sending keep-alive ping to Supabase..."
+          
+          # Remove trailing slash if present
+          URL="${SUPABASE_URL%/}"
+
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${URL}/rest/v1/")
+
+          echo "Supabase REST API Response Status Code: ${HTTP_STATUS}"
+
+          if [ "${HTTP_STATUS}" -ge 200 ] && [ "${HTTP_STATUS}" -lt 400 ]; then
+            echo "SUCCESS: Supabase project activity recorded successfully!"
+          else
+            echo "WARNING: Supabase responded with HTTP ${HTTP_STATUS}"
+            # Still exit 0 if HTTP response received so workflow doesn't mark red unnecessarily on non-200 metadata responses
+            exit 0
+          fi

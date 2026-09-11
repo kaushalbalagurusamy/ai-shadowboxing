@@ -23,6 +23,9 @@ export default function Home() {
     startSession,
     setConversationId,
     setConversationUrl,
+    iframeRef,
+    receptivityScore,
+    receptivityTier,
   } = useTavusSession();
 
   const { insights, masterLog, synthesis } = useSessionInsights(conversationId);
@@ -258,7 +261,12 @@ The user's high value is benchmarked across 4 core pillars:
         )}
       </div>
 
-      <MediaStreamContainer conversationUrl={conversationUrl} />
+      <MediaStreamContainer 
+        conversationUrl={conversationUrl} 
+        iframeRef={iframeRef}
+        receptivityScore={receptivityScore}
+        receptivityTier={receptivityTier}
+      />
 
       <div style={{
         position: 'fixed',
